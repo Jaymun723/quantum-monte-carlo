@@ -1,5 +1,5 @@
 class Wordline: # "w"
-    def __init__(self):
+    def __init__(self, problem: Problem):
         pass
 
     def weight(self): # Omega(w)
