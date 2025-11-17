@@ -1,4 +1,5 @@
-from problem import Problem
+
+from production.problem import Problem
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 class Wordline: # "w"
     def __init__(self, problem: Problem):
         self.problem = problem
-        self.grid = self.initialize_state()
+        self.grid = self._initialize_state()
 
     def weight(self): # Omega(w)
         pass
@@ -17,40 +18,158 @@ class Wordline: # "w"
         """
         n = self.problem.n_sites
         m = self.problem.m
+        spin_color = {1: "red", -1: "cornflowerblue"}
 
         grid = self.grid
         plt.figure()
 
-        # cmap='gray' maps -1->black, 1->white; interpolation='nearest' for sharp squares
-        plt.imshow(grid, cmap="gray", interpolation="nearest", vmin=-1, vmax=1)
+        tiles = np.zeros((m, n))
         for i in range(m):
             for j in range(n):
-                plt.text(j, i, str(grid[i, j]), ha="center", va="center", color="red")
+                tiles[i, j] = (j+i%2+1)%2 # checkerboard pattern for better visibility
 
-        plt.xticks([]); plt.yticks([])
-        plt.gca().set_aspect("equal")
+
+        # cmap='gray' maps -1->black, 1->white; interpolation='nearest' for sharp squares
+        plt.imshow(tiles, cmap="gray", interpolation="nearest", vmin=0, vmax=1)
+         
+        pad = 0.05  # small offset inside each cell
+        for i in range(m):
+            for j in range(n):
+                # place text at top-left of the cell with a small margin
+                plt.text(j - 0.5 + pad, i - 0.5 + pad, str(grid[i, j]),
+                        color=spin_color[grid[i, j]], ha="left", va="top")
+            plt.text(n - 0.5 + pad, i - 0.5 + pad, str(grid[i, 0]),
+                        color=spin_color[grid[i, 0]], ha="left", va="top")
+        for j in range(n):
+                # place text at top-left of the cell with a small margin
+                plt.text(j - 0.5 + pad, m - 0.5 + pad, str(grid[0, j]),
+                        color=spin_color[grid[0, j]], ha="left", va="top")
+        plt.text(n - 0.5 + pad, m - 0.5 + pad, str(grid[0, 0]),
+                        color=spin_color[grid[0, 0]], ha="left", va="top")
+        
+
+        #Plot the wordlines
+        
+
+        for i in range(m):
+            for j in range(n//2):
+                 
+
+                if i%2 == 0:
+                    if grid[i, 2*j%n] == grid[(i+1)%m, 2*j%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+1)%n]:
+                        plt.plot([2*j-0.5, 2*j-0.5], [i-0.5, i+0.5], color=spin_color[grid[i, 2*j%n]], linewidth=2)
+                        plt.plot([2*j+0.5, 2*j+0.5], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
+
+                    if grid[i, 2*j%n] != grid[i, (2*j+1)%n] and grid[i, 2*j%n] == grid[(i+1)%m, (2*j+1)%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, 2*j%n]:
+                        plt.plot([2*j-0.5, 2*j-0.5 +1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j)%n]], linewidth=2)
+                        plt.plot([2*j-0.5+1, 2*j-0.5], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
+                
+                if i%2 == 1 :
+                    if grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+1)%n] and grid[i, (2*j+2)%n] == grid[(i+1)%m, (2*j+2)%n]:
+                        plt.plot([2*j-0.5+1, 2*j-0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
+                        plt.plot([2*j+0.5+1, 2*j+0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+2)%n]], linewidth=2)
+                    
+                    if grid[i, (2*j+1)%n] != grid[i, (2*j+2)%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+2)%n] and grid[i, (2*j+2)%n] == grid[(i+1)%m, (2*j+1)%n]:
+                        plt.plot([2*j-0.5+1, 2*j-0.5 +2], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
+                        plt.plot([2*j-0.5+2, 2*j-0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+2)%n]], linewidth=2)
+                    
+
+        # plt.xticks([]); plt.yticks([])
         plt.show()
         
     
-    def initialize_state(self):
+    def _initialize_state(self):
         n = self.problem.n_sites
         m = self.problem.m
         # Initialize a random state for the wordline
         grid = np.zeros((m, n), dtype=int)
         grid[0, :] = np.random.choice([-1, 1], size=(n))
-        for i in range(1, m):
+
+        # Probablity of exchange 
+        position_list = {}
+        probability_list = np.zeros(m)
+        for i in range(m):
+            probability_list[i] = 0.5
+        for i in range (n):
+            position_list[i] = i
+        
+        for i in range(m-1):
             for j in range(n//2):
-                if m%2 == 0:
-                    if grid[i, 2*j]*grid[i, 2*j+1] == -1 and np.random.rand() < 0.5:
-                        grid[i, 2*j] *= -1
-                        grid[i, 2*j+1] *= -1
+                if i%2 == 0:
+                    grid[(i+1)%m, (2*j)%n] = grid[(i)%m, (2*j)%n]
+                    grid[(i+1)%m, (2*j+1)%n] = grid[(i)%m, (2*j+1)%n]
+                    if grid[(i)%m, (2*j)%n]*grid[(i)%m, (2*j+1)%n] == -1 and np.random.rand() < min(probability_list[(2*j)%n], 1 - probability_list[(2*j+1)%n]):
+                        grid[(i+1)%m, (2*j)%n] = -grid[(i)%m, (2*j)%n]
+                        grid[(i+1)%m, (2*j+1)%n] = -grid[(i)%m, (2*j+1)%n]
+
+
+                        # Update positions 
+                        temp_position = position_list[(2*j)%n]
+                        position_list[(2*j)%n] = position_list[(2*j+1)%n]
+                        position_list[(2*j+1)%n] = temp_position
+
+                        # Update probabilities
+                        d = (2*j)%n - position_list[(2*j)%n]
+                        if d!= 0:  p = (m-i-1)/min(abs(d), n-abs(d)) # probabilité d'échanger vers la droite
+                        if d == 0:
+                            probability_list[(2*j)%n] = 0.5
+                            if i >= m-2:
+                                grid[(i+1)%m, (2*j)%n] = -grid[(i)%m, (2*j)%n]
+                                grid[(i+1)%m, (2*j+1)%n] = -grid[(i)%m, (2*j+1)%n]
+
+
+                        elif (abs(d) <  n - abs(d) and d>0) or (d<0 and abs(d) > n - abs(d)):
+                            probability_list[(2*j)%n] = 1 -p
+                        else:
+                            probability_list[(2*j)%n] = p
+
+                        d = (2*j+1)%n - position_list[(2*j+1)%n]
+                        if d == 0: 
+                            probability_list[(2*j+1)%n] = 0.5
+                        elif (abs(d) <  n - abs(d) and d>0) or (d<0 and abs(d) > n - abs(d)):
+                            probability_list[(2*j+1)%n] = 1 - p
+                        else:
+                            probability_list[(2*j+1)%n] = p
+
+
+
                 
-                if m%2 == 1:
-                    if grid[i, 2*j+2]*grid[i, 2*j+1] == -1 and np.random.rand() < 0.5:
-                        grid[i, 2*j+2] *= -1
-                        grid[i, 2*j+1] *= -1
+                if i%2 == 1:
+                    grid[(i+1)%m, (2*j+2)%n] = grid[(i)%m, (2*j+2)%n]
+                    grid[(i+1)%m, (2*j+1)%n] = grid[(i)%m, (2*j+1)%n]
+                    if grid[(i)%m, (2*j+2)%n]*grid[(i)%m, (2*j+1)%n] == -1 and np.random.rand() < min(1 - probability_list[(2*j+2)%n], probability_list[(2*j+1)%n]):
+                        grid[(i+1)%m, (2*j+2)%n] = -grid[(i)%m, (2*j+2)%n]
+                        grid[(i+1)%m, (2*j+1)%n] = -grid[(i)%m, (2*j+1)%n]
+
+                        # Update positions
+                        temp_position = position_list[(2*j+2)%n]
+                        position_list[(2*j+2)%n] = position_list[(2*j+1)%n]
+                        position_list[(2*j+1)%n] = temp_position
+
+                        # Update probabilities
+                        d = (2*j+2)%n - position_list[(2*j+2)%n]
+                        if d!= 0:  p = (m-i-1)/min(abs(d), n-abs(d)) # probabilité d'échanger vers la droite
+                        if d == 0:
+                            probability_list[(2*j+2)%n] = 0.5
+                            if i >= m-2:
+                                grid[(i+1)%m, (2*j)%n] = -grid[(i)%m, (2*j)%n]
+                                grid[(i+1)%m, (2*j+1)%n] = -grid[(i)%m, (2*j+1)%n]
+                        elif (abs(d) <  n - abs(d) and d>0) or (d<0 and abs(d) > n - abs(d)):
+                            probability_list[(2*j+2)%n] = 1 - p
+                        else:
+                            probability_list[(2*j+2)%n] = p
+                        
+                        d = (2*j+1)%n - position_list[(2*j+1)%n]
+                        if d == 0: 
+                            probability_list[(2*j+1)%n] = 0.5
+                        elif (abs(d) <  n - abs(d) and d>0) or (d<0 and abs(d) > n - abs(d)):
+                            probability_list[(2*j+1)%n] = 1 - p
+                        else:
+                            probability_list[(2*j+1)%n] =  p
                 
-                grid[i, 0] = grid[i, n-1]
+             
+            
+
         return grid
 
 
