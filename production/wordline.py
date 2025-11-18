@@ -11,19 +11,60 @@ class Wordline: # "w"
     - problem: The settings of this simulaton.
     - spins: The (2m, n) spins of the wordline: spins[i] is $\ket{\omega_i}$
     """
-    def __init__(self, problem: Problem):
+    def __init__(self, problem: Problem, spins = None):
         self.problem = problem
-        self.spins = self._initialize_state()
+        self.spins = self._initialize_state() if spins is None else spins
+        self._weight = None
 
-    def weight(self): # Omega(w)
-        pass
+    @property
+    def weight(self):
+        if self._weight == None:
+            self._weight = self._compute_weight()
+        return self._weight
+
+    def _compute_weight(self): # Omega(w)
+        """
+        Compute the weight $\Omega(w)$ of the wordline configuration.
+        """
+        n = self.problem.n_sites
+        m = self.problem.m
+        weight = 1.0
+
+        for tau in range(2*m):
+            for i in range(n//2):
+                spins_selected = (2*i, (2*i+1) % n)
+                if tau % 2 == 1:
+                    spins_selected = ((2*i+1)%n, (2*i+2) % n)
+                
+                bra = list(self.spins[(tau + 1) % (2*m), spins_selected])
+                ket = list(self.spins[tau, spins_selected])
+                # print(f"<{(tau+1) % (2*m)}, {spins_selected}|={bra}")
+                # print(f"|{tau}, {spins_selected}>={ket}")
+
+                if (ket == [1, -1] and bra == [1, -1]) or (ket == [-1, 1] and bra == [-1, 1]):
+                    # print("a")
+                    weight *= np.exp(self.problem.delta_tau * self.problem.J_z / 4) * np.cosh(self.problem.delta_tau * self.problem.J_x / 2)
+                elif (ket == [1, -1] and bra == [-1, 1]) or (ket == [-1, 1] and bra == [1, -1]):
+                    # print("b")
+                    weight *= -np.exp(self.problem.delta_tau * self.problem.J_z / 4) * np.sinh(self.problem.delta_tau * self.problem.J_x / 2)
+                elif (ket == [1, 1] and bra == [1, 1]) or (ket == [-1, -1] and bra == [-1, -1]):
+                    # print("c")
+                    weight *= np.exp(-self.problem.delta_tau * self.problem.J_z / 4)
+                else:
+                    weight = 0.0
+                    break
+
+            if weight == 0.0:
+                break
+
+        return weight
 
     def draw(self):
         """
         Draw a n x m grid of random black (-1) and white (1) squares.
         """
         n = self.problem.n_sites
-        m = self.problem.m
+        m = 2*self.problem.m
         spin_color = {1: "red", -1: "cornflowerblue"}
 
         grid = self.spins
