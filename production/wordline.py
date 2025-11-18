@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class Wordline: # "w"
     def __init__(self, problem: Problem):
         self.problem = problem
-        self.grid = self._initialize_state()
+        self.spins = self._initialize_state()
 
     def weight(self): # Omega(w)
         pass
@@ -20,7 +20,7 @@ class Wordline: # "w"
         m = self.problem.m
         spin_color = {1: "red", -1: "cornflowerblue"}
 
-        grid = self.grid
+        grid = self.spins
         plt.figure()
 
         tiles = np.zeros((m, n))
@@ -171,6 +171,14 @@ class Wordline: # "w"
             
 
         return grid
+    
+class ExhaustiveWordline(Wordline):
+    def __init__(self, problem: Problem, grid: np.ndarray):
+        super().__init__(problem)
+        self.grid = grid
+
+    def weight(self): # Omega(w)
+        pass
 
 
 
