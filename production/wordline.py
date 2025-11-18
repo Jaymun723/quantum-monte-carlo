@@ -5,6 +5,12 @@ import random
 import matplotlib.pyplot as plt
 
 class Wordline: # "w"
+    """
+    
+    Attributes:
+    - problem: The settings of this simulaton.
+    - spins: The (2m, n) spins of the wordline: spins[i] is $\ket{\omega_i}$
+    """
     def __init__(self, problem: Problem):
         self.problem = problem
         self.grid = self._initialize_state()
