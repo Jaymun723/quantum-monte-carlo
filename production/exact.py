@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.linalg import expm
 from production.problem import Problem
+import itertools
+from tqdm import tqdm
+import functools
 
 class ExactSolver:
     """
@@ -46,20 +49,29 @@ class ExactSolver:
         """
         return np.trace(self.exp_H * obs) / np.trace(self.exp_H)
     
+    @functools.cached_property
     def energy(self):
         return self.compute(self.H)
     
     def all_configs(self):
-        initial_config = np.zeros((2*self.problem.m, self.problem.n_sites))
+        # initial_config = np.zeros((2*self.problem.m, self.problem.n_sites))
 
-        def aux(i, j, config):
-            if j == 2*self.problem.m:
-                return [config.copy()]
-            if i == self.problem.n_sites:
-                return aux(0, j+1, config)
-            config[j, i] = 1
-            res = aux(i+1, j, config)
-            config[j, i] = -1
-            return res + aux(i+1, j, config)
+        # def aux(i, j, config):
+        #     if j == 2*self.problem.m:
+        #         return [config.copy()]
+        #     if i == self.problem.n_sites:
+        #         return aux(0, j+1, config)
+        #     config[j, i] = 1
+        #     res = aux(i+1, j, config)
+        #     config[j, i] = -1
+        #     return res + aux(i+1, j, config)
 
-        return aux(0, 0, initial_config)
+        # return aux(0, 0, initial_config)
+        total_configs = 2 * self.problem.m * self.problem.n_sites
+        flats_configs = itertools.product([1, -1], repeat=total_configs)
+
+        for flat_config in tqdm(flats_configs, total=total_configs, desc="Generating configs"):
+            config = np.array(flat_config).reshape((2*self.problem.m), self.problem.n_sites)
+            
+            yield config
+
