@@ -19,7 +19,7 @@ def random_wordline(p: Problem, rng: np.random.Generator | None = None):
     raise ValueError("No configuration found.")
 
 
-def local_move(w: Wordline, rng: np.random.Generator | None = None, switch_propa=1.0):
+def local_move(w: Wordline, rng: np.random.Generator | None = None, switch_propa=0.2):
     rng = np.random.default_rng() if rng is None else rng
 
     n = w.problem.n_sites
@@ -46,5 +46,4 @@ def local_move(w: Wordline, rng: np.random.Generator | None = None, switch_propa
             else:
                 assert w.spins[j, i] == w.spins[j_plus, i_minus]
                 line.append((j_plus, i_minus))
-        print(line)
-        return line
+        return line[:-1]
