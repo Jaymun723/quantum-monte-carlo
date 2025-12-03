@@ -1,24 +1,6 @@
 from .worldline import Worldline
-from .problem import Problem
 import numpy as np
-import itertools
 from functools import reduce
-
-
-def random_worldline(p: Problem, rng: np.random.Generator | None = None):
-    # mettre l'algo de théa à terme, mais pour l'instant celui là fonctionne
-    rng = np.random.default_rng() if rng is None else rng
-    total_configs = 2 * p.m * p.n_sites
-    flats_configs = list(itertools.product([1, -1], repeat=total_configs))
-    rng.shuffle(flats_configs)
-
-    for flat_config in flats_configs:
-        config = np.array(flat_config).reshape((2 * p.m, p.n_sites))
-        w = Worldline(p, config)
-        if w.weight != 0:
-            return w
-
-    raise ValueError("No configuration found.")
 
 
 def local_line_move(w: Worldline, rng: np.random.Generator):
