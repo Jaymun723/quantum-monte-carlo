@@ -1,10 +1,11 @@
-from . import Wordline, Problem
+from .worldline import Worldline
+from .problem import Problem
 import numpy as np
 import itertools
 from functools import reduce
 
 
-def random_wordline(p: Problem, rng: np.random.Generator | None = None):
+def random_worldline(p: Problem, rng: np.random.Generator | None = None):
     # mettre l'algo de théa à terme, mais pour l'instant celui là fonctionne
     rng = np.random.default_rng() if rng is None else rng
     total_configs = 2 * p.m * p.n_sites
@@ -13,14 +14,14 @@ def random_wordline(p: Problem, rng: np.random.Generator | None = None):
 
     for flat_config in flats_configs:
         config = np.array(flat_config).reshape((2 * p.m, p.n_sites))
-        w = Wordline(p, config)
+        w = Worldline(p, config)
         if w.weight != 0:
             return w
 
     raise ValueError("No configuration found.")
 
 
-def local_line_move(w: Wordline, rng: np.random.Generator):
+def local_line_move(w: Worldline, rng: np.random.Generator):
     n = w.problem.n_sites
     m = w.problem.m
 
@@ -90,14 +91,12 @@ def local_line_move(w: Wordline, rng: np.random.Generator):
             line.append((j_plus, i_minus, dE, dOmega))
 
     delta_E = sum([dE for _, _, dE, _ in line]) / w.problem.m
+    delta_Omega = reduce(lambda x, y: y[3] * x, line, 1.0)  # product of all the dOmega
 
-    if rng.random() < np.exp(-w.problem.beta * delta_E):
+    if rng.random() < delta_Omega:
         # prev_energy = w.energy
         # prev_weight = w.weight
         # new_w = w.copy()
-        delta_Omega = reduce(
-            lambda x, y: y[3] * x, line, 1.0
-        )  # product of all the dOmega
 
         for j, i, _, _ in line[:-1]:
             w.spins[j, i] *= -1
@@ -113,7 +112,7 @@ def local_line_move(w: Wordline, rng: np.random.Generator):
     return w
 
 
-def random_shaded_plaquette(w: Wordline, rng: np.random.Generator):
+def random_shaded_plaquette(w: Worldline, rng: np.random.Generator):
     m = w.problem.m
     n = w.problem.n_sites
 
@@ -139,12 +138,10 @@ def random_shaded_plaquette(w: Wordline, rng: np.random.Generator):
 
     if possibles_plaquettes == []:
         return None
-    else:
-        print(possibles_plaquettes)
-        return possibles_plaquettes[rng.integers(len(possibles_plaquettes))]
+    return possibles_plaquettes[rng.integers(len(possibles_plaquettes))]
 
 
-def local_shift_move(w: Wordline, rng: np.random.Generator):
+def local_shift_move(w: Worldline, rng: np.random.Generator):
     cells = random_shaded_plaquette(w, rng)
     if cells is None:
         return w
@@ -191,7 +188,8 @@ def local_shift_move(w: Wordline, rng: np.random.Generator):
 
     # prev_energy = w.energy
     # prev_weight = w.weight
-    if rng.random() < np.exp(-w.problem.beta * delta_E):
+    if rng.random() < np.abs(delta_Omega):
+        # print("local_shift")
         w.energy += delta_E
         w.weight *= delta_Omega
         for cell in cells:
@@ -205,7 +203,7 @@ def local_shift_move(w: Wordline, rng: np.random.Generator):
     return w
 
 
-def local_move(w: Wordline, rng: np.random.Generator | None = None, switch_propa=1.0):
+def local_move(w: Worldline, rng: np.random.Generator | None = None, switch_propa=0.2):
     rng = np.random.default_rng() if rng is None else rng
 
     # Shift or switch ?

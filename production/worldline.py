@@ -1,10 +1,9 @@
-from production.problem import Problem
+from .problem import Problem
 import numpy as np
 import matplotlib.pyplot as plt
-import functools
 
 
-class Wordline:  # "w"
+class Worldline:  # "w"
     """
 
     Attributes:
@@ -22,7 +21,7 @@ class Wordline:  # "w"
             self.energy = np.nan
 
     def copy(self):
-        return Wordline(self.problem, self.spins.copy())
+        return Worldline(self.problem, self.spins.copy())
 
     def compute_weight(self):  # Omega(w)
         """
@@ -403,7 +402,7 @@ class Wordline:  # "w"
         return grid
 
 
-class ExhaustiveWordline(Wordline):
+class ExhaustiveWordline(Worldline):
     def __init__(self, problem: Problem, grid: np.ndarray):
         super().__init__(problem)
         self.grid = grid
