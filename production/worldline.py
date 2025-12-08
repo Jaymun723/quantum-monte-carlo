@@ -149,8 +149,8 @@ class Worldline:  # "w"
 
         ax = plt.gca()
         ax.set_aspect("equal", adjustable="box")
-        ax.set_xlabel("sites ($j$)")
-        ax.set_ylabel("imaginary time ($i$)")
+        ax.set_xlabel("sites ($n$)")
+        ax.set_ylabel("imaginary time ($2m$)")
 
         spins = self.spins
 
@@ -165,7 +165,7 @@ class Worldline:  # "w"
             tiles,
             cmap="gray",
             interpolation="nearest",
-            vmin=-0.5,
+            vmin=-0.1,
             vmax=1,
             extent=(0, n, 2 * m, 0),
         )
@@ -221,6 +221,17 @@ class Worldline:  # "w"
                         linewidth=2,
                     )
 
+                if c*d == -1:
+                    # Impossible square
+                    plt.plot(
+                        [j+0.5],
+                        [i+0.5 ],
+                        color='orange',
+                        marker = 'o',
+                        markersize=10,
+                    )
+                    
+
         
 
         plt.show()
@@ -230,7 +241,7 @@ class Worldline:  # "w"
 
 
 
-    def draw_vertices(self):
+    def draw_vertices(self, loops = None):
         m = self.problem.m
         n = self.problem.n_sites
 
@@ -245,6 +256,52 @@ class Worldline:  # "w"
         ax.set_xlabel("sites ($i$)")
         ax.set_ylabel("imaginary time ($j$)")
 
+        # If there are loops to draw, draw them first
+        if loops is not None and loops[0] is not None:
+            for visited_vertex in loops:
+                # Mark the start point
+                i0, j0 = visited_vertex[0]
+                plt.plot(
+                        [j0] ,
+                        [i0],
+                        color="limegreen",
+                        marker='o',
+                        markersize = 12,
+                    )
+                
+                # Draw the path
+                i0, j0 = visited_vertex[-1]
+                for (i, j) in visited_vertex:
+                    if j0 == 0 and j == n -1:
+                        j0 = n
+                    elif j0 == n -1 and j == 0:
+                        j = n
+                    
+                    if i0 == 0 and i == 2*m -1:
+                        i0 = 2*m
+                    elif i0 == 2*m -1 and i == 0:
+                        i = 2*m
+
+                    i1, j1 = min(i0, i), min(j0, j)
+                    ki, kj = 1, 1
+                    if i == i0:
+                        if i == 0:
+                            i, i0, i1 = 2*m, 2*m, 2*m
+                        ki = -1 if (i + j1) % 2 == 1 else 1
+                    
+                    if j == j0:
+                        if j == 0:
+                            j, j0, j1 = n, n, n
+                        kj = -1 if (i1 + j) % 2 == 1 else 1
+                    
+                    plt.plot(
+                        [j0, j1 + kj*0.5, j], 
+                        [i0, i1 + ki*0.5, i] ,
+                        color="green",
+                        linewidth = 3,
+                    )
+                    i0, j0 = i%(2*m), j%n
+
         spins = self.spins
 
         tiles = np.zeros((2 * m, n))
@@ -258,7 +315,7 @@ class Worldline:  # "w"
             tiles,
             cmap="gray",
             interpolation="nearest",
-            vmin=0,
+            vmin=-0.1,
             vmax=1,
             extent=(0, n, 2 * m, 0),
         )
@@ -266,9 +323,9 @@ class Worldline:  # "w"
         for j in range((2 * m) + 1):
             for i in range(n + 1):
                 if spins[j % (2 * m), i % n] == 1:
-                    plt.plot(i, j, "ro")
+                    plt.plot(i, j, marker = "o", color = "red", markersize=5)
                 else:
-                    plt.plot(i, j, "bo")
+                    plt.plot(i, j, marker = "o", color = "cornflowerblue", markersize=5)
 
         for j in range((2 * m) + 1):
             for base_i in range((n // 2) + 1):
@@ -375,6 +432,9 @@ class Worldline:  # "w"
                         color="black",
                         pivot="tip",
                     )
+
+        
+
 
         plt.show()
 
