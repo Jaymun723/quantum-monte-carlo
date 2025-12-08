@@ -281,6 +281,154 @@ class Worldline:  # "w"
         # plt.xticks([]); plt.yticks([])
         plt.show()
 
+    def draw_vertices(self):
+        m = self.problem.m
+        n = self.problem.n_sites
+
+        plt.xticks(range(n))
+        plt.yticks(range(2 * m))
+        # plt.grid()
+        plt.xlim(0, n)
+        plt.ylim(0, 2 * m)
+
+        ax = plt.gca()
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_xlabel("sites ($i$)")
+        ax.set_ylabel("imaginary time ($j$)")
+
+        spins = self.spins
+
+        tiles = np.zeros((2 * m, n))
+        for j in range(2 * m):
+            for i in range(n):
+                tiles[j, i] = (
+                    i + j % 2 + 1
+                ) % 2  # checkerboard pattern for better visibility
+
+        plt.imshow(
+            tiles,
+            cmap="gray",
+            interpolation="nearest",
+            vmin=0,
+            vmax=1,
+            extent=(0, n, 2 * m, 0),
+        )
+
+        for j in range((2 * m) + 1):
+            for i in range(n + 1):
+                if spins[j % (2 * m), i % n] == 1:
+                    plt.plot(i, j, "ro")
+                else:
+                    plt.plot(i, j, "bo")
+
+        for j in range((2 * m) + 1):
+            for base_i in range((n // 2) + 1):
+                i = 2 * base_i + (j % 2)
+
+                bot_left = np.array([j, i])
+                bot_right = np.array([j, i + 1])
+                top_right = np.array([j + 1, i + 1])
+                top_left = np.array([j + 1, i])
+                center = np.array([j + 0.5, i + 0.5])
+
+                if spins[top_left[0] % (2 * m), top_left[1] % n] == -1:
+                    direction = center - top_left
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        pivot="tip",
+                        color="grey",
+                    )
+                else:
+                    direction = top_left - center
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="black",
+                    )
+
+                if spins[top_right[0] % (2 * m), top_right[1] % n] == -1:
+                    direction = center - top_right
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        pivot="tip",
+                        color="grey",
+                    )
+                else:
+                    direction = top_right - center
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="black",
+                    )
+
+                if spins[bot_right[0] % (2 * m), bot_right[1] % n] == -1:
+                    direction = bot_right - center
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="grey",
+                    )
+                else:
+                    direction = center - bot_right
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="black",
+                        pivot="tip",
+                    )
+
+                if spins[bot_left[0] % (2 * m), bot_left[1] % n] == -1:
+                    direction = bot_left - center
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="grey",
+                    )
+                else:
+                    direction = center - bot_left
+                    plt.quiver(
+                        center[1],
+                        center[0],
+                        direction[1],
+                        direction[0],
+                        scale=1.5,
+                        scale_units="xy",
+                        color="black",
+                        pivot="tip",
+                    )
+
+        plt.show()
+
     def _initialize_state(self):
         i, j0 = 0, 0
         set_spins = [0] * self.problem.n_sites
@@ -524,7 +672,6 @@ class Worldline:  # "w"
         # print(" WARNING Should not reach here")
 
 
-    
 class ExhaustiveWorldline:
     def __init__(self, problem: Problem):
         self.problem = problem
@@ -534,16 +681,14 @@ class ExhaustiveWorldline:
         # ensure we start with an empty result list on each call
         worldlines = []
         # set to record seen configurations (avoid duplicates)
-        spins = np.zeros((int(2*self.problem.m), self.problem.n_sites), dtype=int)
-        set_spins = [0]*self.problem.n_sites
+        spins = np.zeros((int(2 * self.problem.m), self.problem.n_sites), dtype=int)
+        set_spins = [0] * self.problem.n_sites
         i, j0 = 0, 0
         self.generate_valid_state(spins, i, j0, set_spins, worldlines)
         return worldlines
 
-    
-
     def generate_valid_state(self, spins, i, j0, set_spins, worldlines):
-        m = int(2*self.problem.m)
+        m = int(2 * self.problem.m)
         n = self.problem.n_sites
         # self.draw(spins)
 
@@ -558,83 +703,94 @@ class ExhaustiveWorldline:
                 new_spins2 = spins.copy()
                 new_spins2[i, j0] = -1
                 new_set_spins2 = set_spins.copy()
-                
-            
+
                 # Recursively continue processing to handle neighbor and propagation
                 self.generate_valid_state(new_spins1, i, j0, new_set_spins1, worldlines)
                 self.generate_valid_state(new_spins2, i, j0, new_set_spins2, worldlines)
                 return
-                
 
         k = 1 - 2 * ((i + j0) % 2)  # k = 1 if same parity, -1 if different parity
         neighbor = (j0 + k) % n
 
-        a = spins[i, j0]*spins[i, neighbor] # 1 if both have the same spin, -1 if opposite spins, 0 if neighbor is unset
+        a = (
+            spins[i, j0] * spins[i, neighbor]
+        )  # 1 if both have the same spin, -1 if opposite spins, 0 if neighbor is unset
 
-
-        if i == m-1:
+        if i == m - 1:
             # print("i=m-1")
-            if spins[(i+1)%m, j0] !=0 and spins[(i+1)%m, neighbor] !=0:
-                if spins[(i+1)%m, j0]*spins[i, j0]*spins[(i+1)%m, neighbor]*spins[(i+1)%m, neighbor] == 1:
+            if spins[(i + 1) % m, j0] != 0 and spins[(i + 1) % m, neighbor] != 0:
+                if (
+                    spins[(i + 1) % m, j0]
+                    * spins[i, j0]
+                    * spins[(i + 1) % m, neighbor]
+                    * spins[(i + 1) % m, neighbor]
+                    == 1
+                ):
                     # print("i=m-1, on cherche un nouveau j")
                     j = 0
                     while j < n and set_spins[j] == 1:
                         j += 1
                     if j == n:
                         worldlines.append(spins.copy())
-                        
+
                     else:
-                        self.generate_valid_state(spins, (i+1)%m, j, set_spins, worldlines)
-                
+                        self.generate_valid_state(
+                            spins, (i + 1) % m, j, set_spins, worldlines
+                        )
+
                 return
-                    
-            if spins[(i+1)%m, j0] ==0 and spins[(i+1)%m, neighbor] ==0:
+
+            if spins[(i + 1) % m, j0] == 0 and spins[(i + 1) % m, neighbor] == 0:
                 # Try both downward placements
                 new_spins1 = spins.copy()
-                new_spins1[(i + 1)%m, j0] = spins[i, j0]
+                new_spins1[(i + 1) % m, j0] = spins[i, j0]
                 new_set_spins1 = set_spins.copy()
-                self.generate_valid_state(new_spins1, (i+1)%m, j0, new_set_spins1, worldlines)
+                self.generate_valid_state(
+                    new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
+                )
 
                 new_spins2 = spins.copy()
-                new_spins2[(i + 1)%m, neighbor] = spins[i, j0]
+                new_spins2[(i + 1) % m, neighbor] = spins[i, j0]
                 new_set_spins2 = set_spins.copy()
-                self.generate_valid_state(new_spins2, (i+1)%m, neighbor, new_set_spins2, worldlines)
+                self.generate_valid_state(
+                    new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
+                )
                 return
-                
-            elif spins[(i+1)%m, j0] !=0 or spins[(i+1)%m, neighbor] !=0:
+
+            elif spins[(i + 1) % m, j0] != 0 or spins[(i + 1) % m, neighbor] != 0:
                 if a == 1:
                     # both columns have same spin: set the row below for both columns if needed
-                    if spins[(i + 1)%m, j0] == 0:
-                        spins[(i + 1)%m, j0] = spins[i, j0]
-                        chosen_spin = j0 
+                    if spins[(i + 1) % m, j0] == 0:
+                        spins[(i + 1) % m, j0] = spins[i, j0]
+                        chosen_spin = j0
                     else:
                         return
-                
+
                 if a == -1:
-                    if spins[(i + 1)%m, j0] == 0:
+                    if spins[(i + 1) % m, j0] == 0:
                         # print("a = -1, j0")
-                        spins[(i + 1)%m, j0] = spins[i, j0]
+                        spins[(i + 1) % m, j0] = spins[i, j0]
                         chosen_spin = j0
-                    
-                    elif spins[(i + 1)%m, neighbor] == 0:
+
+                    elif spins[(i + 1) % m, neighbor] == 0:
                         # print("a = -1, neighbor")
-                        spins[(i + 1)%m, neighbor] = spins[i, j0]
+                        spins[(i + 1) % m, neighbor] = spins[i, j0]
                         chosen_spin = neighbor
-                    
+
                     else:
                         # print("a = -1, refusé")
                         return
 
                 if a == 0:
                     # one of the below row cells may already be set and possibly incompatible
-                    j1 = j0 if spins[(i+1)%m, j0] !=0 else neighbor
-                    if spins[(i+1)%m, j1] != spins[i, j0]:
+                    j1 = j0 if spins[(i + 1) % m, j0] != 0 else neighbor
+                    if spins[(i + 1) % m, j1] != spins[i, j0]:
                         chosen_spin = j0 if j1 != j0 else neighbor
-                        spins[(i + 1)%m, chosen_spin] = spins[i, j0]
-                    
+                        spins[(i + 1) % m, chosen_spin] = spins[i, j0]
+
                     else:
                         chosen_spin = j1
-                        spins[(i + 1)%m, chosen_spin] = spins[i, j0]
+                        spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
                     # else:
                     #     # print("i=m-1, a=0, on essaye les deux choix")
@@ -658,9 +814,11 @@ class ExhaustiveWorldline:
 
                 if set_spins[chosen_spin] == 0:
                     set_spins[chosen_spin] = 1
-                    self.generate_valid_state(spins, (i+1)%m, chosen_spin, set_spins, worldlines)
+                    self.generate_valid_state(
+                        spins, (i + 1) % m, chosen_spin, set_spins, worldlines
+                    )
                     return
-                
+
                 else:
                     j = 0
                     while j < n and set_spins[j] == 1:
@@ -668,113 +826,192 @@ class ExhaustiveWorldline:
                     if j == n:
                         worldlines.append(spins.copy())
                     else:
-                        self.generate_valid_state(spins, (i+1)%m, j, set_spins, worldlines)
+                        self.generate_valid_state(
+                            spins, (i + 1) % m, j, set_spins, worldlines
+                        )
                     return
-                   
-                    
-
 
         if a == 0:
             # try both downward continuations for exhaustive enumeration
             new_spins1 = spins.copy()
-            new_spins1[(i + 1)%m, j0] = spins[i, j0]
+            new_spins1[(i + 1) % m, j0] = spins[i, j0]
             new_set_spins1 = set_spins.copy()
-            self.generate_valid_state(new_spins1, (i+1)%m, j0, new_set_spins1, worldlines)
+            self.generate_valid_state(
+                new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
+            )
 
             new_spins2 = spins.copy()
-            new_spins2[(i + 1)%m, neighbor] = spins[i, j0]
+            new_spins2[(i + 1) % m, neighbor] = spins[i, j0]
             new_set_spins2 = set_spins.copy()
-            self.generate_valid_state(new_spins2, (i+1)%m, neighbor, new_set_spins2, worldlines)
+            self.generate_valid_state(
+                new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
+            )
             return
             # if validity:
             #     # print("i=m-1, 0, 0, le changement est valide")
             #     return new_spins, new_set_spins, True
 
-                
         if a == 1:
             # straight continuation: set downward cell and recurse if the two cells do not cross
-            if spins[(i + 1)%m, j0] == 0:
-                spins[(i + 1)%m, j0] = spins[i, j0]
-                self.generate_valid_state(spins, (i + 1)%m, j0, set_spins, worldlines)
+            if spins[(i + 1) % m, j0] == 0:
+                spins[(i + 1) % m, j0] = spins[i, j0]
+                self.generate_valid_state(spins, (i + 1) % m, j0, set_spins, worldlines)
             return
-        
+
         if a == -1:
             # diagonal continuation required: check if its possible
-            if spins[(i + 1)%m, j0] == 0:
-                spins[(i + 1)%m, j0] = spins[i, j0]
-                self.generate_valid_state(spins, (i + 1)%m, j0, set_spins, worldlines)
+            if spins[(i + 1) % m, j0] == 0:
+                spins[(i + 1) % m, j0] = spins[i, j0]
+                self.generate_valid_state(spins, (i + 1) % m, j0, set_spins, worldlines)
 
-            elif spins[(i + 1)%m, neighbor] == 0:
-                spins[(i + 1)%m, neighbor] = spins[i, j0]
-                self.generate_valid_state(spins, (i + 1)%m, neighbor, set_spins, worldlines)
+            elif spins[(i + 1) % m, neighbor] == 0:
+                spins[(i + 1) % m, neighbor] = spins[i, j0]
+                self.generate_valid_state(
+                    spins, (i + 1) % m, neighbor, set_spins, worldlines
+                )
 
             return
-        
+
         return
 
-        
-    
     def draw_worldline(self, grid):
         """
         Draw a n x m grid of random black (-1) and white (1) squares.
         """
         n = self.problem.n_sites
-        m = int(2*self.problem.m)
+        m = int(2 * self.problem.m)
         spin_color = {1: "red", -1: "cornflowerblue", 0: "black"}
 
-        
         plt.figure()
 
         tiles = np.zeros((m, n))
         for i in range(m):
             for j in range(n):
-                tiles[i, j] = (j+i%2+1)%2 # checkerboard pattern for better visibility
-
+                tiles[i, j] = (
+                    j + i % 2 + 1
+                ) % 2  # checkerboard pattern for better visibility
 
         # cmap='gray' maps -1->black, 1->white; interpolation='nearest' for sharp squares
         plt.imshow(tiles, cmap="gray", interpolation="nearest", vmin=0, vmax=1)
-         
+
         pad = 0.05  # small offset inside each cell
         for i in range(m):
             for j in range(n):
                 # place text at top-left of the cell with a small margin
-                plt.text(j - 0.5 + pad, i - 0.5 + pad, str(grid[i, j]),
-                        color=spin_color[grid[i, j]], ha="left", va="top")
-            plt.text(n - 0.5 + pad, i - 0.5 + pad, str(grid[i, 0]),
-                        color=spin_color[grid[i, 0]], ha="left", va="top")
+                plt.text(
+                    j - 0.5 + pad,
+                    i - 0.5 + pad,
+                    str(grid[i, j]),
+                    color=spin_color[grid[i, j]],
+                    ha="left",
+                    va="top",
+                )
+            plt.text(
+                n - 0.5 + pad,
+                i - 0.5 + pad,
+                str(grid[i, 0]),
+                color=spin_color[grid[i, 0]],
+                ha="left",
+                va="top",
+            )
         for j in range(n):
-                # place text at top-left of the cell with a small margin
-                plt.text(j - 0.5 + pad, m - 0.5 + pad, str(grid[0, j]),
-                        color=spin_color[grid[0, j]], ha="left", va="top")
-        plt.text(n - 0.5 + pad, m - 0.5 + pad, str(grid[0, 0]),
-                        color=spin_color[grid[0, 0]], ha="left", va="top")
-        
+            # place text at top-left of the cell with a small margin
+            plt.text(
+                j - 0.5 + pad,
+                m - 0.5 + pad,
+                str(grid[0, j]),
+                color=spin_color[grid[0, j]],
+                ha="left",
+                va="top",
+            )
+        plt.text(
+            n - 0.5 + pad,
+            m - 0.5 + pad,
+            str(grid[0, 0]),
+            color=spin_color[grid[0, 0]],
+            ha="left",
+            va="top",
+        )
 
-        #Plot the wordlines
-        
+        # Plot the wordlines
 
         for i in range(m):
-            for j in range(n//2):
-                 
+            for j in range(n // 2):
+                if i % 2 == 0:
+                    if (
+                        grid[i, 2 * j % n] == grid[(i + 1) % m, 2 * j % n]
+                        and grid[i, (2 * j + 1) % n]
+                        == grid[(i + 1) % m, (2 * j + 1) % n]
+                    ):
+                        plt.plot(
+                            [2 * j - 0.5, 2 * j - 0.5],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, 2 * j % n]],
+                            linewidth=2,
+                        )
+                        plt.plot(
+                            [2 * j + 0.5, 2 * j + 0.5],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 1) % n]],
+                            linewidth=2,
+                        )
 
-                if i%2 == 0:
-                    if grid[i, 2*j%n] == grid[(i+1)%m, 2*j%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+1)%n]:
-                        plt.plot([2*j-0.5, 2*j-0.5], [i-0.5, i+0.5], color=spin_color[grid[i, 2*j%n]], linewidth=2)
-                        plt.plot([2*j+0.5, 2*j+0.5], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
+                    if (
+                        grid[i, 2 * j % n] != grid[i, (2 * j + 1) % n]
+                        and grid[i, 2 * j % n] == grid[(i + 1) % m, (2 * j + 1) % n]
+                        and grid[i, (2 * j + 1) % n] == grid[(i + 1) % m, 2 * j % n]
+                    ):
+                        plt.plot(
+                            [2 * j - 0.5, 2 * j - 0.5 + 1],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j) % n]],
+                            linewidth=2,
+                        )
+                        plt.plot(
+                            [2 * j - 0.5 + 1, 2 * j - 0.5],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 1) % n]],
+                            linewidth=2,
+                        )
 
-                    if grid[i, 2*j%n] != grid[i, (2*j+1)%n] and grid[i, 2*j%n] == grid[(i+1)%m, (2*j+1)%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, 2*j%n]:
-                        plt.plot([2*j-0.5, 2*j-0.5 +1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j)%n]], linewidth=2)
-                        plt.plot([2*j-0.5+1, 2*j-0.5], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
-                
-                if i%2 == 1 :
-                    if grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+1)%n] and grid[i, (2*j+2)%n] == grid[(i+1)%m, (2*j+2)%n]:
-                        plt.plot([2*j-0.5+1, 2*j-0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
-                        plt.plot([2*j+0.5+1, 2*j+0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+2)%n]], linewidth=2)
-                    
-                    if grid[i, (2*j+1)%n] != grid[i, (2*j+2)%n] and grid[i, (2*j+1)%n] == grid[(i+1)%m, (2*j+2)%n] and grid[i, (2*j+2)%n] == grid[(i+1)%m, (2*j+1)%n]:
-                        plt.plot([2*j-0.5+1, 2*j-0.5 +2], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+1)%n]], linewidth=2)
-                        plt.plot([2*j-0.5+2, 2*j-0.5+1], [i-0.5, i+0.5], color=spin_color[grid[i, (2*j+2)%n]], linewidth=2)
-                    
+                if i % 2 == 1:
+                    if (
+                        grid[i, (2 * j + 1) % n] == grid[(i + 1) % m, (2 * j + 1) % n]
+                        and grid[i, (2 * j + 2) % n]
+                        == grid[(i + 1) % m, (2 * j + 2) % n]
+                    ):
+                        plt.plot(
+                            [2 * j - 0.5 + 1, 2 * j - 0.5 + 1],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 1) % n]],
+                            linewidth=2,
+                        )
+                        plt.plot(
+                            [2 * j + 0.5 + 1, 2 * j + 0.5 + 1],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 2) % n]],
+                            linewidth=2,
+                        )
+
+                    if (
+                        grid[i, (2 * j + 1) % n] != grid[i, (2 * j + 2) % n]
+                        and grid[i, (2 * j + 1) % n]
+                        == grid[(i + 1) % m, (2 * j + 2) % n]
+                        and grid[i, (2 * j + 2) % n]
+                        == grid[(i + 1) % m, (2 * j + 1) % n]
+                    ):
+                        plt.plot(
+                            [2 * j - 0.5 + 1, 2 * j - 0.5 + 2],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 1) % n]],
+                            linewidth=2,
+                        )
+                        plt.plot(
+                            [2 * j - 0.5 + 2, 2 * j - 0.5 + 1],
+                            [i - 0.5, i + 0.5],
+                            color=spin_color[grid[i, (2 * j + 2) % n]],
+                            linewidth=2,
+                        )
 
         # plt.xticks([]); plt.yticks([])
         plt.show()
