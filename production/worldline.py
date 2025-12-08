@@ -139,7 +139,7 @@ class Worldline:  # "w"
         """
         Draw a n x m grid of random black (-1) and white (1) squares.
         """
-        if grid.all() == None:
+        if grid.any() is None:
             grid = self.spins
 
         n = self.problem.n_sites
@@ -284,7 +284,9 @@ class Worldline:  # "w"
     def _initialize_state(self):
         i, j0 = 0, 0
         set_spins = [0] * self.problem.n_sites
-        self.spins, _, _ = self.generate_valid_state(self.spins, i, j0, set_spins)
+        spins = np.zeros((int(2 * self.problem.m), self.problem.n_sites), dtype=int)
+        spins, _, _ = self.generate_valid_state(spins, i, j0, set_spins)
+        return spins
 
     def generate_valid_state(self, spins, i, j0, set_spins):  # with prints
         m = int(2 * self.problem.m)
