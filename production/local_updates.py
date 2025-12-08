@@ -4,10 +4,11 @@ from functools import reduce
 
 
 def local_line_move(w: Worldline, rng: np.random.Generator):
-    n = w.problem.n_sites
-    m = w.problem.m
+    n = w.problem.n_sites  # i
+    m = w.problem.m  # j
 
     starting_cells = list(range(n))
+    # (j, i, dE, dOmega)
     line = [(0, rng.choice(starting_cells), 0.0, 1.0)]
     # dE = 0.0
     # dOmega = 1.0
