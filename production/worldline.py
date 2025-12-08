@@ -139,7 +139,7 @@ class Worldline:  # "w"
         """
         Draw a n x m grid of random black (-1) and white (1) squares.
         """
-        if grid.any() is None:
+        if grid is None:
             grid = self.spins
 
         n = self.problem.n_sites
