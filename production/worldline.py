@@ -135,151 +135,100 @@ class Worldline:  # "w"
 
         plt.show()
 
-    def draw(self, grid=None):
-        """
-        Draw a n x m grid of random black (-1) and white (1) squares.
-        """
-        if grid is None:
-            grid = self.spins
 
+
+    def draw(self):
+        m = self.problem.m
         n = self.problem.n_sites
-        m = int(2 * self.problem.m)
-        spin_color = {1: "red", -1: "cornflowerblue", 0: "black"}
 
-        # grid = self.spins
-        plt.figure()
+        plt.xticks(range(n))
+        plt.yticks(range(2 * m))
+        # plt.grid()
+        plt.xlim(0, n)
+        plt.ylim(0, 2 * m)
 
-        tiles = np.zeros((m, n))
-        for i in range(m):
-            for j in range(n):
-                tiles[i, j] = (
-                    j + i % 2 + 1
+        ax = plt.gca()
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_xlabel("sites ($j$)")
+        ax.set_ylabel("imaginary time ($i$)")
+
+        spins = self.spins
+
+        tiles = np.zeros((2 * m, n))
+        for j in range(2 * m):
+            for i in range(n):
+                tiles[j, i] = (
+                    i + j % 2 + 1
                 ) % 2  # checkerboard pattern for better visibility
 
-        # cmap='gray' maps -1->black, 1->white; interpolation='nearest' for sharp squares
-        plt.imshow(tiles, cmap="gray", interpolation="nearest", vmin=0, vmax=1)
-
-        pad = 0.05  # small offset inside each cell
-        for i in range(m):
-            for j in range(n):
-                # place text at top-left of the cell with a small margin
-                plt.text(
-                    j - 0.5 + pad,
-                    i - 0.5 + pad,
-                    str(grid[i, j]),
-                    color=spin_color[grid[i, j]],
-                    ha="left",
-                    va="top",
-                )
-            plt.text(
-                n - 0.5 + pad,
-                i - 0.5 + pad,
-                str(grid[i, 0]),
-                color=spin_color[grid[i, 0]],
-                ha="left",
-                va="top",
-            )
-        for j in range(n):
-            # place text at top-left of the cell with a small margin
-            plt.text(
-                j - 0.5 + pad,
-                m - 0.5 + pad,
-                str(grid[0, j]),
-                color=spin_color[grid[0, j]],
-                ha="left",
-                va="top",
-            )
-        plt.text(
-            n - 0.5 + pad,
-            m - 0.5 + pad,
-            str(grid[0, 0]),
-            color=spin_color[grid[0, 0]],
-            ha="left",
-            va="top",
+        plt.imshow(
+            tiles,
+            cmap="gray",
+            interpolation="nearest",
+            vmin=-0.5,
+            vmax=1,
+            extent=(0, n, 2 * m, 0),
         )
 
-        # Plot the wordlines
+        spin_color = {1: "red", -1: "cornflowerblue", 0: "black"}
 
-        for i in range(m):
-            for j in range(n // 2):
-                if i % 2 == 0:
-                    if (
-                        grid[i, 2 * j % n] == grid[(i + 1) % m, 2 * j % n]
-                        and grid[i, (2 * j + 1) % n]
-                        == grid[(i + 1) % m, (2 * j + 1) % n]
-                    ):
-                        plt.plot(
-                            [2 * j - 0.5, 2 * j - 0.5],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, 2 * j % n]],
-                            linewidth=2,
-                        )
-                        plt.plot(
-                            [2 * j + 0.5, 2 * j + 0.5],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 1) % n]],
-                            linewidth=2,
-                        )
 
-                    if (
-                        grid[i, 2 * j % n] != grid[i, (2 * j + 1) % n]
-                        and grid[i, 2 * j % n] == grid[(i + 1) % m, (2 * j + 1) % n]
-                        and grid[i, (2 * j + 1) % n] == grid[(i + 1) % m, 2 * j % n]
-                    ):
-                        plt.plot(
-                            [2 * j - 0.5, 2 * j - 0.5 + 1],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j) % n]],
-                            linewidth=2,
-                        )
-                        plt.plot(
-                            [2 * j - 0.5 + 1, 2 * j - 0.5],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 1) % n]],
-                            linewidth=2,
-                        )
+        for i in range((2 * m) + 1):
+            for j in range(n + 1):
+                plt.plot(j, i,marker='o', color = spin_color[spins[i % (2 * m), j % n]] , markersize=5)
+                
+                
 
-                if i % 2 == 1:
-                    if (
-                        grid[i, (2 * j + 1) % n] == grid[(i + 1) % m, (2 * j + 1) % n]
-                        and grid[i, (2 * j + 2) % n]
-                        == grid[(i + 1) % m, (2 * j + 2) % n]
-                    ):
-                        plt.plot(
-                            [2 * j - 0.5 + 1, 2 * j - 0.5 + 1],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 1) % n]],
-                            linewidth=2,
-                        )
-                        plt.plot(
-                            [2 * j + 0.5 + 1, 2 * j + 0.5 + 1],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 2) % n]],
-                            linewidth=2,
-                        )
+        for i in range((2 * m)):
+            for j in range(1, n):
+                k = 1 - 2 * ((i%(2*m) + j) % 2)  # k = 1 if same parity, -1 if different parity
+                neighbor = (j + k) % n
+                i1, j1 = (i + 1) % (2 * m +1), (j + k) % (n+1)
+                up = (i + 1) % (2 * m)
 
-                    if (
-                        grid[i, (2 * j + 1) % n] != grid[i, (2 * j + 2) % n]
-                        and grid[i, (2 * j + 1) % n]
-                        == grid[(i + 1) % m, (2 * j + 2) % n]
-                        and grid[i, (2 * j + 2) % n]
-                        == grid[(i + 1) % m, (2 * j + 1) % n]
-                    ):
-                        plt.plot(
-                            [2 * j - 0.5 + 1, 2 * j - 0.5 + 2],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 1) % n]],
-                            linewidth=2,
-                        )
-                        plt.plot(
-                            [2 * j - 0.5 + 2, 2 * j - 0.5 + 1],
-                            [i - 0.5, i + 0.5],
-                            color=spin_color[grid[i, (2 * j + 2) % n]],
-                            linewidth=2,
-                        )
+                c = spins[i%(2*m), j%n]*spins[up, j%n]
+                d = spins[i%(2*m), neighbor]*spins[up, neighbor]
+                
 
-        # plt.xticks([]); plt.yticks([])
+                
+                if  c == 1 and d == 1:
+                    # straight lines
+                    plt.plot(
+                        [j, j],
+                        [i , i1],
+                        color=spin_color[spins[i%(2*m), j%n]],
+                        linewidth=2,
+                    )
+                    plt.plot(
+                        [j1, j1],
+                        [i, i1 ],
+                        color=spin_color[spins[i%(2*m), neighbor]],
+                        linewidth=2,
+                    )
+
+                if c == -1 and d == -1:
+                    # crossed lines
+                    plt.plot(
+                        [j, j1],
+                        [i , i1 ],
+                        color=spin_color[spins[i%(2*m), j%n]],
+                        linewidth=2,
+                    )
+                    plt.plot(
+                        [j1, j],
+                        [i , i1 ],
+                        color=spin_color[spins[i%(2*m), neighbor]],
+                        linewidth=2,
+                    )
+
+        
+
         plt.show()
+
+
+
+
+
 
     def draw_vertices(self):
         m = self.problem.m
