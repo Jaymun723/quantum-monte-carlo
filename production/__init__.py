@@ -2,7 +2,7 @@ from .exact import ExactSolver
 from .problem import Problem
 from .worldline import Worldline
 from .local_updates import local_move
-from .vertex_updates import vertex_move
+from .vertex_updates import perform_vertex_loop_update
 from .loop_updates import loop_update
 from .monte_carlo import MonteCarlo
 
