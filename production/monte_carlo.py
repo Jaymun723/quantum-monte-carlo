@@ -32,6 +32,8 @@ class MonteCarlo:
         self.rng = np.random.default_rng(seed)
         self.save_folder = save_folder
 
+        self.save_folder.mkdir(parents=True, exist_ok=True)
+
         self.energies = np.zeros((len(problems), n_rep, n_cycles))
         self.spins = []
         for pb_idx, pb in enumerate(self.problems):
