@@ -1,7 +1,7 @@
 """
 # Computations of Energy, Spins with perform_vertex_loop_update, fixed T
 
-Short name: `vertex_n_J_x_J_z_T` (names of fixed parameters)
+Short name: `local_n_J_x_J_z_T` (names of fixed parameters)
 """
 
 from production import MonteCarlo, Problem
@@ -16,7 +16,7 @@ mc = MonteCarlo(
     local_shift_move,
     n_cycles=5_000,
     n_rep=10,
-    save_folder=Path("../data/loop_n_J_x_J_z_T"),
+    save_folder=Path("./data/local_n_J_x_J_z_T"),
 )
 
 mc.run()

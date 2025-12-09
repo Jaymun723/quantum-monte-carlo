@@ -15,7 +15,7 @@ mc = MonteCarlo(
     perform_vertex_loop_update,
     n_cycles=5_000,
     n_rep=10,
-    save_folder=Path("../data/loop_n_J_x_J_z_T"),
+    save_folder=Path("./data/vertex_n_J_x_J_z_T"),
 )
 
 mc.run()
