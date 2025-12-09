@@ -70,7 +70,7 @@ class MonteCarlo:
             self.times[pb_idx, r] = time() - t0
         
         np.save(self.save_folder / "energies.npy", self.energies)
-        with open( self.save_folder / "spins.pickle") as f:
+        with open( self.save_folder / "spins.pickle", "wb") as f:
             pickle.dump(self.spins, f)
         np.save(self.save_folder / "times.npy", self.times)
 
