@@ -65,19 +65,6 @@ class ExactSolver:
         return self.compute(self.H)
 
     def all_configs(self):
-        # initial_config = np.zeros((2*self.problem.m, self.problem.n_sites))
-
-        # def aux(i, j, config):
-        #     if j == 2*self.problem.m:
-        #         return [config.copy()]
-        #     if i == self.problem.n_sites:
-        #         return aux(0, j+1, config)
-        #     config[j, i] = 1
-        #     res = aux(i+1, j, config)
-        #     config[j, i] = -1
-        #     return res + aux(i+1, j, config)
-
-        # return aux(0, 0, initial_config)
         total_configs = 2 * self.problem.m * self.problem.n_sites
         flats_configs = itertools.product([1, -1], repeat=total_configs)
 

@@ -4,6 +4,9 @@ import numpy as np
 
 
 def get_loops(wl: Worldline, rng: np.random.Generator):
+    """
+    Maps graphs to the Worldline then returns the loops.
+    """
     n = wl.problem.n_sites
     m = wl.problem.m
 
@@ -55,12 +58,12 @@ def get_loops(wl: Worldline, rng: np.random.Generator):
 
 
 def loop_update(wl: Worldline, rng: np.random.Generator):
+    """
+    Performs the algorithm described in section 1.3.
+    """
     loops = get_loops(wl, rng)
 
-    # loop_changed = 0
     for loop in loops:
         if rng.random() < 0.5:
-            # loop_changed += 1
-            # print(loop)
             for j, i in loop:
                 wl.spins[j, i] *= -1

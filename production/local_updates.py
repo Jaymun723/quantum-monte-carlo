@@ -4,6 +4,10 @@ from functools import reduce
 
 
 def local_line_move(w: Worldline, rng: np.random.Generator):
+    """
+    Find a line and switch the spins along it.
+    Not used as it does not respect the balance.
+    """
     n = w.problem.n_sites  # i
     m = w.problem.m  # j
 
@@ -96,6 +100,14 @@ def local_line_move(w: Worldline, rng: np.random.Generator):
 
 
 def random_shaded_plaquette(w: Worldline, rng: np.random.Generator):
+    """
+    Returns a shaded plaquette in the form:
+    a -- b
+    |    |
+    a -- b
+    With a != b
+    `None` if no such shaded plaquette is found.
+    """
     m = w.problem.m
     n = w.problem.n_sites
 
@@ -125,6 +137,10 @@ def random_shaded_plaquette(w: Worldline, rng: np.random.Generator):
 
 
 def local_shift_move(w: Worldline, rng: np.random.Generator):
+    """
+    Local move of section Fig. 2
+    """
+
     cells = random_shaded_plaquette(w, rng)
     if cells is None:
         return w
@@ -184,6 +200,11 @@ def local_shift_move(w: Worldline, rng: np.random.Generator):
     # print(new_weight / prev_weight, delta_Omega)
 
     return w
+
+
+"""
+Do not use because it uses the local_line_;ove zhich is incorrect.
+"""
 
 
 def local_move(w: Worldline, rng: np.random.Generator | None = None, switch_propa=0.2):

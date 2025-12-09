@@ -10,6 +10,8 @@ class Worldline:  # "w"
     Attributes:
     - problem: The settings of this simulaton.
     - spins: The (2m, n) spins of the wordline: spins[i] is $\\ket{\\omega_i}$
+    - weight: The weight of the Worldline.
+    - energy: Energy attributed to the Worldline. NaN is weight is 0.
     """
 
     def __init__(self, problem: Problem, spins=None):
@@ -99,45 +101,7 @@ class Worldline:  # "w"
 
         return energy / m
 
-    def debug(self):
-        rows, cols = self.spins.shape
-
-        # Create figure
-        fig, ax = plt.subplots(figsize=(6, 6))
-
-        # Iterate over grid to plot points
-        # We invert the y-axis logic so row 0 is at the top (matrix style)
-        for r in range(rows):
-            for c in range(cols):
-                val = self.spins[r, c]
-                color = "red" if val == 1 else "black"
-
-                # Plot point.
-                # x = column index
-                # y = inverted row index (rows - 1 - r)
-                ax.scatter(c, rows - 1 - r, c=color, s=200, edgecolors="gray", zorder=2)
-
-        # Set limits and grid
-        ax.set_xlim(-0.5, cols - 0.5)
-        ax.set_ylim(-0.5, rows - 0.5)
-        ax.set_aspect("equal")
-
-        # Tick labels
-        ax.set_xticks(range(cols))
-        ax.set_yticks(range(rows))
-        # Invert y-labels so 0 is at the top
-        ax.set_yticklabels(range(rows)[::-1])
-
-        ax.grid(True, linestyle="--", alpha=0.5, zorder=1)
-        ax.set_title("Configuration (Red=1, Black=-1)")
-        plt.xlabel("n_sites (columns)")
-        plt.ylabel("2*m (rows)")
-
-        plt.show()
-
-
-
-    def draw(self, grid = None):
+    def draw(self, grid=None):
         m = self.problem.m
         n = self.problem.n_sites
 
@@ -152,14 +116,12 @@ class Worldline:  # "w"
         ax.set_xlabel("sites ($n$)")
         ax.set_ylabel("imaginary time ($2m$)")
 
-
         spins = self.spins
         if grid is not None:
             spins = grid
             m = len(grid) // 2
             n = len(grid[0])
 
-        
         tiles = np.zeros((2 * m, n))
         for j in range(2 * m):
             for i in range(n):
@@ -178,37 +140,40 @@ class Worldline:  # "w"
 
         spin_color = {1: "red", -1: "cornflowerblue", 0: "black"}
 
-
         for i in range((2 * m) + 1):
             for j in range(n + 1):
-                plt.plot(j, i,marker='o', color = spin_color[spins[i % (2 * m), j % n]] , markersize=5)
-                
-                
+                plt.plot(
+                    j,
+                    i,
+                    marker="o",
+                    color=spin_color[spins[i % (2 * m), j % n]],
+                    markersize=5,
+                )
 
         for i in range((2 * m)):
             for j in range(1, n):
-                k = 1 - 2 * ((i%(2*m) + j) % 2)  # k = 1 if same parity, -1 if different parity
+                k = 1 - 2 * (
+                    (i % (2 * m) + j) % 2
+                )  # k = 1 if same parity, -1 if different parity
                 neighbor = (j + k) % n
-                i1, j1 = (i + 1) % (2 * m +1), (j + k) % (n+1)
+                i1, j1 = (i + 1) % (2 * m + 1), (j + k) % (n + 1)
                 up = (i + 1) % (2 * m)
 
-                c = spins[i%(2*m), j%n]*spins[up, j%n]
-                d = spins[i%(2*m), neighbor]*spins[up, neighbor]
-                
+                c = spins[i % (2 * m), j % n] * spins[up, j % n]
+                d = spins[i % (2 * m), neighbor] * spins[up, neighbor]
 
-                
-                if  c == 1 and d == 1:
+                if c == 1 and d == 1:
                     # straight lines
                     plt.plot(
                         [j, j],
-                        [i , i1],
-                        color=spin_color[spins[i%(2*m), j%n]],
+                        [i, i1],
+                        color=spin_color[spins[i % (2 * m), j % n]],
                         linewidth=2,
                     )
                     plt.plot(
                         [j1, j1],
-                        [i, i1 ],
-                        color=spin_color[spins[i%(2*m), neighbor]],
+                        [i, i1],
+                        color=spin_color[spins[i % (2 * m), neighbor]],
                         linewidth=2,
                     )
 
@@ -216,38 +181,30 @@ class Worldline:  # "w"
                     # crossed lines
                     plt.plot(
                         [j, j1],
-                        [i , i1 ],
-                        color=spin_color[spins[i%(2*m), j%n]],
+                        [i, i1],
+                        color=spin_color[spins[i % (2 * m), j % n]],
                         linewidth=2,
                     )
                     plt.plot(
                         [j1, j],
-                        [i , i1 ],
-                        color=spin_color[spins[i%(2*m), neighbor]],
+                        [i, i1],
+                        color=spin_color[spins[i % (2 * m), neighbor]],
                         linewidth=2,
                     )
 
-                if c*d == -1:
+                if c * d == -1:
                     # Impossible square
                     plt.plot(
-                        [j+0.5],
-                        [i+0.5 ],
-                        color='orange',
-                        marker = 'o',
+                        [j + 0.5],
+                        [i + 0.5],
+                        color="orange",
+                        marker="o",
                         markersize=10,
                     )
-                    
-
-        
 
         plt.show()
 
-
-
-
-
-
-    def draw_vertices(self, loops = None):
+    def draw_vertices(self, loops=None):
         m = self.problem.m
         n = self.problem.n_sites
 
@@ -268,45 +225,45 @@ class Worldline:  # "w"
                 # Mark the start point
                 i0, j0 = visited_vertex[0]
                 plt.plot(
-                        [j0] ,
-                        [i0],
-                        color="limegreen",
-                        marker='o',
-                        markersize = 12,
-                    )
-                
+                    [j0],
+                    [i0],
+                    color="limegreen",
+                    marker="o",
+                    markersize=12,
+                )
+
                 # Draw the path
                 i0, j0 = visited_vertex[-1]
-                for (i, j) in visited_vertex:
-                    if j0 == 0 and j == n -1:
+                for i, j in visited_vertex:
+                    if j0 == 0 and j == n - 1:
                         j0 = n
-                    elif j0 == n -1 and j == 0:
+                    elif j0 == n - 1 and j == 0:
                         j = n
-                    
-                    if i0 == 0 and i == 2*m -1:
-                        i0 = 2*m
-                    elif i0 == 2*m -1 and i == 0:
-                        i = 2*m
+
+                    if i0 == 0 and i == 2 * m - 1:
+                        i0 = 2 * m
+                    elif i0 == 2 * m - 1 and i == 0:
+                        i = 2 * m
 
                     i1, j1 = min(i0, i), min(j0, j)
                     ki, kj = 1, 1
                     if i == i0:
                         if i == 0:
-                            i, i0, i1 = 2*m, 2*m, 2*m
+                            i, i0, i1 = 2 * m, 2 * m, 2 * m
                         ki = -1 if (i + j1) % 2 == 1 else 1
-                    
+
                     if j == j0:
                         if j == 0:
                             j, j0, j1 = n, n, n
                         kj = -1 if (i1 + j) % 2 == 1 else 1
-                    
+
                     plt.plot(
-                        [j0, j1 + kj*0.5, j], 
-                        [i0, i1 + ki*0.5, i] ,
+                        [j0, j1 + kj * 0.5, j],
+                        [i0, i1 + ki * 0.5, i],
                         color="green",
-                        linewidth = 3,
+                        linewidth=3,
                     )
-                    i0, j0 = i%(2*m), j%n
+                    i0, j0 = i % (2 * m), j % n
 
         spins = self.spins
 
@@ -329,9 +286,9 @@ class Worldline:  # "w"
         for j in range((2 * m) + 1):
             for i in range(n + 1):
                 if spins[j % (2 * m), i % n] == 1:
-                    plt.plot(i, j, marker = "o", color = "red", markersize=5)
+                    plt.plot(i, j, marker="o", color="red", markersize=5)
                 else:
-                    plt.plot(i, j, marker = "o", color = "cornflowerblue", markersize=5)
+                    plt.plot(i, j, marker="o", color="cornflowerblue", markersize=5)
 
         for j in range((2 * m) + 1):
             for base_i in range((n // 2) + 1):
@@ -439,9 +396,6 @@ class Worldline:  # "w"
                         pivot="tip",
                     )
 
-        
-
-
         plt.show()
 
     def _initialize_state(self):
@@ -476,7 +430,9 @@ class Worldline:  # "w"
                 print(f"i=0, j0 = {j0} chosen value {chosen_value} is valid")
                 return new_spins, new_set_spins, True
             else:
-                print(f"i=0, j0 = {j0} chosen value {chosen_value} is not valid, new value is {-chosen_value}")
+                print(
+                    f"i=0, j0 = {j0} chosen value {chosen_value} is not valid, new value is {-chosen_value}"
+                )
                 chosen_value = -chosen_value
                 spins[0, j0] = chosen_value
                 return self.generate_valid_state(spins, i, j0, set_spins)
@@ -504,12 +460,16 @@ class Worldline:  # "w"
                     return spins, set_spins, False
 
                 else:
-                    print(f"i= {i}, j0 = {j0}, at last row, both below spins set, compatible spins, looking for new j")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, both below spins set, compatible spins, looking for new j"
+                    )
                     j = 0
-                    while j < n and set_spins[j % n] == 1 :
+                    while j < n and set_spins[j % n] == 1:
                         j += 1
                     if set_spins[j % n] == 0:
-                        print(f"i= {i}, j0 = {j0}, at last row, both below spins set, compatible spins, found new j = {j}")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, both below spins set, compatible spins, found new j = {j}"
+                        )
                         return self.generate_valid_state(
                             spins, (i + 1) % m, j, set_spins
                         )
@@ -523,22 +483,30 @@ class Worldline:  # "w"
                 new_spins = spins.copy()
                 new_spins[(i + 1) % m, chosen_spin] = spins[i, j0]
                 new_set_spins = set_spins.copy()
-                print(f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin {chosen_spin}")
+                print(
+                    f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin {chosen_spin}"
+                )
 
                 if new_set_spins[chosen_spin] == 0:
-                    print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin"
+                    )
                     new_set_spins[chosen_spin] = 1
                     new_spins, new_set_spins, validity = self.generate_valid_state(
                         new_spins, (i + 1) % m, chosen_spin, new_set_spins
                     )
 
                 else:
-                    print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j"
+                    )
                     j = 0
                     while new_set_spins[j % n] == 1 and j < n:
                         j += 1
                     if new_set_spins[j % n] == 0:
-                        print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}"
+                        )
                         new_spins, new_set_spins, validity = self.generate_valid_state(
                             new_spins, (i + 1) % m, j, new_set_spins
                         )
@@ -547,11 +515,15 @@ class Worldline:  # "w"
                         return new_spins, new_set_spins, True
 
                 if validity:
-                    print(f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin {chosen_spin}, valid")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin {chosen_spin}, valid"
+                    )
                     return new_spins, new_set_spins, True
                 else:
                     chosen_spin = [neighbor, j0][1 - (chosen_spin == j0)]
-                    print(f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin  not valid, chosen spin {chosen_spin} instead")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, both below spins unset, chose spin  not valid, chosen spin {chosen_spin} instead"
+                    )
                     spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
             elif spins[(i + 1) % m, j0] != 0 or spins[(i + 1) % m, neighbor] != 0:
@@ -559,42 +531,60 @@ class Worldline:  # "w"
                 if parity == 1:
                     print(f"i= {i}, j0 = {j0}, at last row, parity=1")
                     if spins[(i + 1) % m, j0] == 0:
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=1, j0 unset, setting spin at j0")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=1, j0 unset, setting spin at j0"
+                        )
                         spins[(i + 1) % m, j0] = spins[i, j0]
                         chosen_spin = j0
 
                     else:
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=1, j0 set, invalid state")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=1, j0 set, invalid state"
+                        )
                         return spins, set_spins, False
 
                 if parity == -1:
                     chosen_spin = j0 if spins[(i + 1) % m, j0] == 0 else neighbor
-                    print(f"i= {i}, j0 = {j0}, at last row, parity=-1, setting spin at {chosen_spin} as its the one empty")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, parity=-1, setting spin at {chosen_spin} as its the one empty"
+                    )
                     spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
                 if parity == 0:
-                    print(f"i= {i}, j0 = {j0}, at last row, parity=0, checking if the set spin is compatible")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, parity=0, checking if the set spin is compatible"
+                    )
                     j1 = j0 if spins[(i + 1) % m, j0] != 0 else neighbor
                     if spins[(i + 1) % m, j1] != spins[i, j0]:
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is opposite, its a valid state, setting the other spin")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is opposite, its a valid state, setting the other spin"
+                        )
                         chosen_spin = j0 if j1 != j0 else neighbor
                         spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
                     elif spins[(i + 1) % m, j1] == spins[i, j0] and j1 == j0:
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is same and below, only one option as we cannot cross with same spins")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is same and below, only one option as we cannot cross with same spins"
+                        )
                         chosen_spin = j0
                         spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
                     else:
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is same, need to try both options, going to the set spin or to the other as both are possible")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=0, set spin is same, need to try both options, going to the set spin or to the other as both are possible"
+                        )
                         chosen_spin = random.choice([j0, neighbor])
                         new_spins = spins.copy()
                         new_spins[(i + 1) % m, chosen_spin] = spins[i, j0]
                         new_set_spins = set_spins.copy()
-                        print(f"i= {i}, j0 = {j0}, at last row, parity=0, trying chosen spin {chosen_spin}")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, parity=0, trying chosen spin {chosen_spin}"
+                        )
 
                         if new_set_spins[chosen_spin] == 0:
-                            print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin")
+                            print(
+                                f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin"
+                            )
                             new_set_spins[chosen_spin] = 1
                             new_spins, new_set_spins, validity = (
                                 self.generate_valid_state(
@@ -603,12 +593,16 @@ class Worldline:  # "w"
                             )
 
                         else:
-                            print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j")
+                            print(
+                                f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j"
+                            )
                             j = 0
                             while new_set_spins[j % n] == 1 and j < n:
                                 j += 1
                             if new_set_spins[j % n] == 0:
-                                print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}")
+                                print(
+                                    f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}"
+                                )
                                 new_spins, new_set_spins, validity = (
                                     self.generate_valid_state(
                                         new_spins, (i + 1) % m, j, new_set_spins
@@ -619,28 +613,40 @@ class Worldline:  # "w"
                                 return new_spins, new_set_spins, True
 
                         if validity:
-                            print(f"i= {i}, j0 = {j0}, at last row, parity=0, chosen spin {chosen_spin} is valid")
+                            print(
+                                f"i= {i}, j0 = {j0}, at last row, parity=0, chosen spin {chosen_spin} is valid"
+                            )
                             return new_spins, new_set_spins, True
                         else:
-                            print(f"i= {i}, j0 = {j0}, at last row, parity=0, chosen spin {chosen_spin} is not valid, trying the other spin")
+                            print(
+                                f"i= {i}, j0 = {j0}, at last row, parity=0, chosen spin {chosen_spin} is not valid, trying the other spin"
+                            )
                             chosen_spin = [neighbor, j0][1 - (chosen_spin == j0)]
                             spins[(i + 1) % m, chosen_spin] = spins[i, j0]
 
-                print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} now seeing if it has already been set  before")
+                print(
+                    f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} now seeing if it has already been set  before"
+                )
                 if set_spins[chosen_spin] == 0:
-                    print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} hasn't been set, setting it now and continue on that spin"
+                    )
                     set_spins[chosen_spin] = 1
                     return self.generate_valid_state(
                         spins, (i + 1) % m, chosen_spin, set_spins
                     )
 
                 else:
-                    print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j")
+                    print(
+                        f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, looking for new j"
+                    )
                     j = 0
                     while set_spins[j % n] == 1 and j < n:
                         j += 1
                     if set_spins[j % n] == 0:
-                        print(f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}")
+                        print(
+                            f"i= {i}, j0 = {j0}, at last row, chosen spin is {chosen_spin} has already been set, found new j = {j}"
+                        )
                         return self.generate_valid_state(
                             spins, (i + 1) % m, j, set_spins
                         )
@@ -659,10 +665,14 @@ class Worldline:  # "w"
                 new_spins, (i + 1) % m, chosen_spin, new_set_spins
             )
             if validity:
-                print(f"i= {i}, j0 = {j0}, parity=0, chosen spin {chosen_spin} is valid")
+                print(
+                    f"i= {i}, j0 = {j0}, parity=0, chosen spin {chosen_spin} is valid"
+                )
                 return new_spins, new_set_spins, True
             else:
-                print(f"i= {i}, j0 = {j0}, parity=0, chosen spin {chosen_spin} is not valid, trying the other spin")
+                print(
+                    f"i= {i}, j0 = {j0}, parity=0, chosen spin {chosen_spin} is not valid, trying the other spin"
+                )
                 chosen_spin = [neighbor, j0][1 - (chosen_spin == j0)]
                 spins[(i + 1) % m, chosen_spin] = spins[i, j0]
                 return self.generate_valid_state(
@@ -714,13 +724,13 @@ class ExhaustiveWorldline:
             set_spins[j0] = 1
             # At top row: if unset, branch both spin choices; otherwise mark column as seen and continue
             if spins[i, j0] == 0:
-                # First we test spin = 1 
+                # First we test spin = 1
                 new_spins1 = spins.copy()
                 new_spins1[i, j0] = 1
                 new_set_spins1 = set_spins.copy()
                 self.generate_valid_state(new_spins1, i, j0, new_set_spins1, worldlines)
 
-                # Then we test spin = -1 
+                # Then we test spin = -1
                 new_spins2 = spins.copy()
                 new_spins2[i, j0] = -1
                 new_set_spins2 = set_spins.copy()
@@ -746,9 +756,8 @@ class ExhaustiveWorldline:
                 ):
                     # print("i=m-1, on cherche un nouveau j")
                     j = 0
-                    while j < n and set_spins[j%n] == 1:
+                    while j < n and set_spins[j % n] == 1:
                         j += 1
-
 
                     if set_spins[j % n] == 0:
                         self.generate_valid_state(
@@ -760,23 +769,22 @@ class ExhaustiveWorldline:
                 return
 
             if spins[(i + 1) % m, j0] == 0 and spins[(i + 1) % m, neighbor] == 0:
-                # Try in the same column 
+                # Try in the same column
                 new_spins1 = spins.copy()
                 new_spins1[(i + 1) % m, j0] = spins[i, j0]
                 new_set_spins1 = set_spins.copy()
 
-                #Check if we filled all columns or if its the first time we arrive at this column
+                # Check if we filled all columns or if its the first time we arrive at this column
                 if new_set_spins1[j0] == 0:
                     new_set_spins1[j0] = 1
                     self.generate_valid_state(
-                    new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
+                        new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
                     )
-                
+
                 else:
                     j = 0
-                    while j < n and new_set_spins1[j%n] == 1:
+                    while j < n and new_set_spins1[j % n] == 1:
                         j += 1
-
 
                     if new_set_spins1[j % n] == 0:
                         self.generate_valid_state(
@@ -786,25 +794,22 @@ class ExhaustiveWorldline:
                     else:
                         worldlines.append(new_spins1.copy())
 
-                
-                
                 # Try in the neighbor column
                 new_spins2 = spins.copy()
                 new_spins2[(i + 1) % m, neighbor] = spins[i, j0]
                 new_set_spins2 = set_spins.copy()
 
-                #Check if we filled all columns or if its the first time we arrive at this column
+                # Check if we filled all columns or if its the first time we arrive at this column
                 if new_set_spins2[neighbor] == 0:
                     new_set_spins2[neighbor] = 1
                     self.generate_valid_state(
-                    new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
+                        new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
                     )
-                
+
                 else:
                     j = 0
-                    while j < n and new_set_spins2[j%n] == 1:
+                    while j < n and new_set_spins2[j % n] == 1:
                         j += 1
-
 
                     if new_set_spins2[j % n] == 0:
                         self.generate_valid_state(
@@ -846,57 +851,64 @@ class ExhaustiveWorldline:
                         new_spins1[(i + 1) % m, j0] = spins[i, j0]
                         new_set_spins1 = set_spins.copy()
 
-                        #Check if we filled all columns or if its the first time we arrive at this column
+                        # Check if we filled all columns or if its the first time we arrive at this column
                         if new_set_spins1[j0] == 0:
                             new_set_spins1[j0] = 1
                             self.generate_valid_state(
-                            new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
+                                new_spins1, (i + 1) % m, j0, new_set_spins1, worldlines
                             )
-                        
+
                         else:
                             j = 0
-                            while j < n and new_set_spins1[j%n] == 1:
+                            while j < n and new_set_spins1[j % n] == 1:
                                 j += 1
-
 
                             if new_set_spins1[j % n] == 0:
                                 self.generate_valid_state(
-                                    new_spins1, (i + 1) % m, j, new_set_spins1, worldlines
+                                    new_spins1,
+                                    (i + 1) % m,
+                                    j,
+                                    new_set_spins1,
+                                    worldlines,
                                 )
 
                             else:
                                 worldlines.append(new_spins1.copy())
 
-                        
-                        
                         # Try in the neighbor column
                         new_spins2 = spins.copy()
                         new_spins2[(i + 1) % m, neighbor] = spins[i, j0]
                         new_set_spins2 = set_spins.copy()
 
-                        #Check if we filled all columns or if its the first time we arrive at this column
+                        # Check if we filled all columns or if its the first time we arrive at this column
                         if new_set_spins2[neighbor] == 0:
                             new_set_spins2[neighbor] = 1
                             self.generate_valid_state(
-                            new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
+                                new_spins2,
+                                (i + 1) % m,
+                                neighbor,
+                                new_set_spins2,
+                                worldlines,
                             )
-                        
+
                         else:
                             j = 0
-                            while j < n and new_set_spins2[j%n] == 1:
+                            while j < n and new_set_spins2[j % n] == 1:
                                 j += 1
-
 
                             if new_set_spins2[j % n] == 0:
                                 self.generate_valid_state(
-                                    new_spins2, (i + 1) % m, j, new_set_spins2, worldlines
+                                    new_spins2,
+                                    (i + 1) % m,
+                                    j,
+                                    new_set_spins2,
+                                    worldlines,
                                 )
 
                             else:
                                 worldlines.append(spins.copy())
                         return
 
-                    
                 if set_spins[chosen_spin] == 0:
                     set_spins[chosen_spin] = 1
                     self.generate_valid_state(
@@ -912,7 +924,7 @@ class ExhaustiveWorldline:
                         self.generate_valid_state(
                             spins, (i + 1) % m, j, set_spins, worldlines
                         )
-                    
+
                     else:
                         worldlines.append(spins.copy())
                     return
@@ -933,7 +945,6 @@ class ExhaustiveWorldline:
                 new_spins2, (i + 1) % m, neighbor, new_set_spins2, worldlines
             )
             return
-            
 
         if parity == 1:
             # straight continuation: set downward cell and recurse if the two cells do not cross
@@ -946,7 +957,9 @@ class ExhaustiveWorldline:
             # both continuations are possible, choose the only available cell
             chosen_spin = j0 if spins[(i + 1) % m, j0] == 0 else neighbor
             spins[(i + 1) % m, chosen_spin] = spins[i, j0]
-            self.generate_valid_state(spins, (i + 1) % m, chosen_spin, set_spins, worldlines)
+            self.generate_valid_state(
+                spins, (i + 1) % m, chosen_spin, set_spins, worldlines
+            )
             return
         print(" WARNING Should not reach here")
 
