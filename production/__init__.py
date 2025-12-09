@@ -12,7 +12,7 @@ __all__ = [
     "Worldline",
     "local_move",
     "random_worldline",
-    "vertex_move",
+    "perform_vertex_loop_update",
     "loop_update",
     "MonteCarlo",
 ]
