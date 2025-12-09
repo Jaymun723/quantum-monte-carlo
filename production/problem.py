@@ -109,3 +109,6 @@ class Problem:
             "S2": probs_S2,
             "S3": probs_S3,
         }
+
+    def __repr__(self):
+        return f"Problem(n={self.n_sites}, J_x={self.J_x}, J_z={self.J_z}, T={self.temperature}, m={self.m})"
