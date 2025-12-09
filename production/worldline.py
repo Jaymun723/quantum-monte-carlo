@@ -137,7 +137,7 @@ class Worldline:  # "w"
 
 
 
-    def draw(self):
+    def draw(self, grid = None):
         m = self.problem.m
         n = self.problem.n_sites
 
@@ -152,8 +152,14 @@ class Worldline:  # "w"
         ax.set_xlabel("sites ($n$)")
         ax.set_ylabel("imaginary time ($2m$)")
 
-        spins = self.spins
 
+        spins = self.spins
+        if grid is not None:
+            spins = grid
+            m = len(grid) // 2
+            n = len(grid[0])
+
+        
         tiles = np.zeros((2 * m, n))
         for j in range(2 * m):
             for i in range(n):

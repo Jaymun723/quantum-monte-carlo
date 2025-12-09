@@ -41,9 +41,10 @@ def available_directions_in_plaquette(w: Worldline, i: int, j: int):
 def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, seen_vertex: set, initial_plaquette, i, j):
     m = w.problem.m  # i
     n = w.problem.n_sites  # j
+
        
     # If we are back to the initial plaquette we stop
-    if (i, j) == initial_plaquette and len(visited_vertex) > 0:
+    if (i, j) == initial_plaquette and len(visited_vertex) > 1:
         i0, j0 = visited_vertex[0]
         i_old, j_old = visited_vertex[-1]
         plaquette = np.array([[w.spins[i, j], w.spins[i, (j + 1) % n]],
@@ -55,6 +56,12 @@ def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, se
         plaquette_new[(i_old - i) % 2, (j_old - j) % 2] *= -1
         dE, dOmega = parameters_for_plaquette_configuration(w, plaquette)
         dE_new, dOmega_new = parameters_for_plaquette_configuration(w, plaquette_new)
+        
+        w.draw(plaquette)
+        print(dE_new, dE, dOmega_new, dOmega)
+        print(w.problem.energy_cross, w.problem.energy_full, w.problem.energy_side)
+        w.draw(plaquette_new)
+
         dE = dE_new - dE
         dOmega = dOmega_new / dOmega
         return (i, j), dE, dOmega, True
@@ -83,7 +90,7 @@ def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, se
 
     #calculate the new energy and weight changes
     dE, dOmega = 0.0, 1.0
-    if len(visited_vertex) > 0:
+    if len(visited_vertex) > 1:
         # compute the plaquette at the current (i, j)
         plaquette = np.array([[w.spins[i, j], w.spins[i, (j + 1) % n]],
                               [w.spins[(i + 1) % (2 * m), j], w.spins[(i + 1) % (2 * m), (j + 1) % n]]])
@@ -91,11 +98,17 @@ def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, se
         # flip the chosen vertex within the plaquette
         plaquette_new[(i0 - i) % 2, (j0 - j) % 2] *= -1
         # flip the previously visited vertex if present (the element before the last)
-        if len(visited_vertex) >= 2:
-            i_old, j_old = visited_vertex[-2]
-            plaquette_new[(i_old - i) % 2, (j_old - j) % 2] *= -1
+        i_old, j_old = visited_vertex[-2]
+        plaquette_new[(i_old - i) % 2, (j_old - j) % 2] *= -1
+        
         dE, dOmega = parameters_for_plaquette_configuration(w, plaquette)
         dE_new, dOmega_new = parameters_for_plaquette_configuration(w, plaquette_new)
+
+        w.draw(plaquette)
+        print(dE_new, dE, dOmega_new, dOmega)
+        print(w.problem.energy_cross, w.problem.energy_full, w.problem.energy_side)
+        w.draw(plaquette_new)
+
         dE = dE_new - dE
         dOmega = dOmega_new / dOmega
 
@@ -124,6 +137,7 @@ def vertex_loop(w: Worldline, rng: np.random.Generator):
         (i, j), dE, dOmega, already_visited = vertex_move(w, rng, visited_vertex, seen_vertex, initial_plaquette,  i, j)
         delta_E += dE
         delta_Omega *= dOmega
+        print(n_vertices, delta_E, delta_Omega)
         n_vertices += 1
     
     if n_vertices == max_vertices:
