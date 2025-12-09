@@ -1,6 +1,6 @@
 from .worldline import Worldline
 import numpy as np
-from functools import reduce
+# from functools import reduce
 
 def random_white_plaquette(w: Worldline, rng: np.random.Generator):
     n = w.problem.n_sites  # j
@@ -38,34 +38,17 @@ def available_directions_in_plaquette(w: Worldline, i: int, j: int):
 
     return directions
      
-def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, seen_vertex: set, initial_plaquette, i, j):
-    m = w.problem.m  # i
-    n = w.problem.n_sites  # j
-
+def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, seen_vertex: set, visited_plaquettes, i, j):
+    # m = w.problem.m  # i
+    # n = w.problem.n_sites  # j
+    
        
     # If we are back to the initial plaquette we stop
-    if (i, j) == initial_plaquette and len(visited_vertex) > 1:
-        i0, j0 = visited_vertex[0]
-        i_old, j_old = visited_vertex[-1]
-        plaquette = np.array([[w.spins[i, j], w.spins[i, (j + 1) % n]],
-                              [w.spins[(i + 1) % (2 * m), j], w.spins[(i + 1) % (2 * m), (j + 1) % n]]])
-        plaquette_new = plaquette.copy()
-        # flip the first vertex within the plaquette
-        plaquette_new[(i0 - i) % 2, (j0 - j) % 2] *= -1
-        # flip the previously visited vertex if present (the last element)
-        plaquette_new[(i_old - i) % 2, (j_old - j) % 2] *= -1
-        dE, dOmega = parameters_for_plaquette_configuration(w, plaquette)
-        dE_new, dOmega_new = parameters_for_plaquette_configuration(w, plaquette_new)
-        
-        w.draw(plaquette)
-        print(dE_new, dE, dOmega_new, dOmega)
-        print(w.problem.energy_cross, w.problem.energy_full, w.problem.energy_side)
-        w.draw(plaquette_new)
-
-        dE = dE_new - dE
-        dOmega = dOmega_new / dOmega
-        return (i, j), dE, dOmega, True
+    if len(visited_vertex) > 1 and (i, j) == visited_plaquettes[0]:
+        return (i, j), True
     
+    visited_plaquettes.append((i, j))
+
     directions = available_directions_in_plaquette(w, i, j)
 
     # if no available directions, stop the loop
@@ -81,48 +64,21 @@ def vertex_move(w: Worldline, rng: np.random.Generator, visited_vertex: list, se
         for i in range(len(directions)):
             if i != idx: 
                 d.append(directions[i])
-        # print(visited_vertex, directions[idx][2:])
         directions = d
         idx = int(rng.integers(0, len(directions)))
     i0, j0, i_new, j_new = directions[idx]
     visited_vertex.append((i0, j0))
     seen_vertex.add((i0, j0))
 
-    #calculate the new energy and weight changes
-    dE, dOmega = 0.0, 1.0
-    if len(visited_vertex) > 1:
-        # compute the plaquette at the current (i, j)
-        plaquette = np.array([[w.spins[i, j], w.spins[i, (j + 1) % n]],
-                              [w.spins[(i + 1) % (2 * m), j], w.spins[(i + 1) % (2 * m), (j + 1) % n]]])
-        plaquette_new = plaquette.copy()
-        # flip the chosen vertex within the plaquette
-        plaquette_new[(i0 - i) % 2, (j0 - j) % 2] *= -1
-        # flip the previously visited vertex if present (the element before the last)
-        i_old, j_old = visited_vertex[-2]
-        plaquette_new[(i_old - i) % 2, (j_old - j) % 2] *= -1
-        
-        dE, dOmega = parameters_for_plaquette_configuration(w, plaquette)
-        dE_new, dOmega_new = parameters_for_plaquette_configuration(w, plaquette_new)
 
-        w.draw(plaquette)
-        print(dE_new, dE, dOmega_new, dOmega)
-        print(w.problem.energy_cross, w.problem.energy_full, w.problem.energy_side)
-        w.draw(plaquette_new)
-
-        dE = dE_new - dE
-        dOmega = dOmega_new / dOmega
-
-
-
-    
-
-    return (i_new, j_new), dE, dOmega, False
+    return (i_new, j_new), False
 
 def vertex_loop(w: Worldline, rng: np.random.Generator):
     n = w.problem.n_sites  # j
     m = w.problem.m  # i
 
     visited_vertex = []
+    visited_plaquettes = []
     seen_vertex = set()
     initial_plaquette = random_white_plaquette(w, rng)
     n_vertices = 0
@@ -130,21 +86,16 @@ def vertex_loop(w: Worldline, rng: np.random.Generator):
 
     i, j = initial_plaquette
     already_visited = False
-    delta_E = 0.0
-    delta_Omega = 1.0
 
     while not already_visited and n_vertices < max_vertices:
-        (i, j), dE, dOmega, already_visited = vertex_move(w, rng, visited_vertex, seen_vertex, initial_plaquette,  i, j)
-        delta_E += dE
-        delta_Omega *= dOmega
-        print(n_vertices, delta_E, delta_Omega)
+        (i, j), already_visited = vertex_move(w, rng, visited_vertex, seen_vertex, visited_plaquettes,  i, j)
         n_vertices += 1
     
     if n_vertices == max_vertices:
         print("Warning: maximum number of vertices reached in vertex loop update.")
         return None, None, None
     
-    return visited_vertex, delta_E, delta_Omega
+    return visited_vertex, visited_plaquettes
 
 def parameters_for_plaquette_configuration(w: Worldline, plaquette):
     dE, dOmega = 0.0, 1.0
@@ -170,8 +121,9 @@ def parameters_for_plaquette_configuration(w: Worldline, plaquette):
     return dE, dOmega
 
 def perform_vertex_loop_update(w: Worldline, rng: np.random.Generator):
-
-    visited_vertex, delta_E, delta_Omega = vertex_loop(w, rng)
+    n = w.problem.n_sites  # j
+    m = w.problem.m  # i
+    visited_vertex, visited_plaquettes = vertex_loop(w, rng)
 
     # if vertex loop failed or returned nothing
     if visited_vertex is None:
@@ -181,13 +133,40 @@ def perform_vertex_loop_update(w: Worldline, rng: np.random.Generator):
         return None
 
     
+    spins2 = w.spins.copy()
+
+    for i, j in visited_vertex:
+            spins2[i, j] *= -1
+
+    
+    spins_copy = w.spins.copy()
+    delta_E = 0
+    delta_Omega = 1
+
+    for i, j in visited_vertex:
+        spins_copy[i, j] *= -1
+
+    for (i, j) in visited_plaquettes:
+        
+    
+        plaquette = np.array([[w.spins[i, j], w.spins[i, (j + 1) % n]],
+                            [w.spins[(i + 1) % (2 * m), j], w.spins[(i + 1) % (2 * m), (j + 1) % n]]])
+        dE, dOmega = parameters_for_plaquette_configuration(w, plaquette)
+
+        plaquette_copy = np.array([[spins_copy[i, j], spins_copy[i, (j + 1) % n]],
+                            [spins_copy[(i + 1) % (2 * m), j], spins_copy[(i + 1) % (2 * m), (j + 1) % n]]])
+        dE_new, dOmega_new = parameters_for_plaquette_configuration(w, plaquette_copy)
+
+
+        delta_E += (dE_new - dE)/m
+        delta_Omega *= dOmega_new / dOmega
     
 
-    if True: #rng.random() < np.abs(delta_Omega):
+
+    if  rng.random() < np.abs(delta_Omega):
         w.energy += delta_E
         w.weight *= delta_Omega
-        for i, j in visited_vertex:
-            w.spins[i, j] *= -1
+        w.spins = spins_copy
         return visited_vertex
     
     return None
