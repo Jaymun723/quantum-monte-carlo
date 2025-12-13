@@ -53,31 +53,51 @@ class ExactSolver:
             H += self.problem.J_z * self.compute_S(i, "z")
         return H
 
-    def compute(self, obs):
+    def get_sector_indices(self, n_up):
         """
-        Computes the expected value of the observable provided.
-        $<O>=tr(e^{-\\beta H}O)/tr(e^{\\beta H})$
+        Identifies the indices in the 2^N Hilbert space that correspond
+        to states with exactly n_up spins.
         """
-        return np.trace(self.exp_H @ obs) / np.trace(self.exp_H)
+        indices = []
+        # Iterate through all 2^N basis states
+        for i in range(1 << self.problem.n_sites):
+            # Check population count (number of set bits)
+            # In binary representation, 1=Up, 0=Down
+            if bin(i).count("1") == n_up:
+                indices.append(i)
+        return np.array(indices)
+
+    def compute(self, obs, n_up=None):
+        """
+        Computes <O> = tr(rho * O) / tr(rho).
+
+        If n_up is provided, restricts the trace to the subspace with
+        fixed number of up spins.
+        """
+        if n_up is None:
+            # Full Hilbert Space Average (Grand Canonical / Open Shell)
+            return np.trace(self.exp_H @ obs) / np.trace(self.exp_H)
+        else:
+            # Canonical Ensemble Average (Fixed Magnetization)
+            idx = self.get_sector_indices(n_up)
+
+            if len(idx) == 0:
+                raise ValueError(f"No states found with n_up={n_up}")
+
+            # Project matrices onto the subspace defined by idx
+            # np.ix_ creates a mesh to extract the submatrix where row,col are in idx
+            sub_rho = self.exp_H[np.ix_(idx, idx)]
+            sub_obs = obs[np.ix_(idx, idx)]
+
+            # Compute trace within this block
+            val = np.trace(sub_rho @ sub_obs) / np.trace(sub_rho)
+            return val
 
     @functools.cached_property
     def energy(self):
         return self.compute(self.H)
 
     def all_configs(self):
-        # initial_config = np.zeros((2*self.problem.m, self.problem.n_sites))
-
-        # def aux(i, j, config):
-        #     if j == 2*self.problem.m:
-        #         return [config.copy()]
-        #     if i == self.problem.n_sites:
-        #         return aux(0, j+1, config)
-        #     config[j, i] = 1
-        #     res = aux(i+1, j, config)
-        #     config[j, i] = -1
-        #     return res + aux(i+1, j, config)
-
-        # return aux(0, 0, initial_config)
         total_configs = 2 * self.problem.m * self.problem.n_sites
         flats_configs = itertools.product([1, -1], repeat=total_configs)
 

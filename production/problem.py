@@ -67,42 +67,41 @@ class Problem:
         Calculates the generalized loop update probabilities for the XXZ model,
         allowing for the "frozen" graph (G=3) to handle all parameter regimes.
         """
-        # 1. Calculate Vertex Weights W(S)
         W1 = self.weight_side
         W2 = -self.weight_cross
         W3 = self.weight_full
 
-        # 2. Determine the Frozen Graph Weight (f)
-        # We set f to ensure all other weights (v, h, d) remain non-negative.
-        # The condition is effectively checking the "triangle inequality" of weights.
-
-        # Calculate potential negative deficits
         deficit_diag = W1 - (W2 + W3)
         deficit_vert = W2 - (W1 + W3)
         deficit_horiz = W3 - (W1 + W2)
 
-        # Set f to cover the largest deficit (if any)
         f = max(0, deficit_diag, deficit_vert, deficit_horiz)
 
-        # 3. Calculate Graph Weights using the general solution
-        d = 0.5 * (W2 + W3 - W1 + f)  # Diagonal
-        v = 0.5 * (W1 + W3 - W2 + f)  # Vertical
-        h = 0.5 * (W1 + W2 - W3 + f)  # Horizontal
+        d = 0.5 * (W2 + W3 - W1 + f)
+        v = 0.5 * (W1 + W3 - W2 + f)
+        h = 0.5 * (W1 + W2 - W3 + f)
 
-        # 4. Calculate Probabilities P(S -> (S, G))
-
-        # Vertex S=1 (Néel): Compatible with Vertical, Horizontal, Frozen
         probs_S1 = {"G1": v / W1, "G2": h / W1, "G3": f / W1}
+        probs_S1 = (
+            list(probs_S1.keys()),
+            list(probs_S1.values()),
+        )
 
-        # Vertex S=2 (Flip): Compatible with Horizontal, Diagonal, Frozen
-        # Guard against W2=0 (pure Ising case)
         if W2 > 1e-14:
             probs_S2 = {"G2": h / W2, "G4": d / W2, "G3": f / W2}
         else:
             probs_S2 = {"G2": 0, "G4": 0, "G3": 0}
 
-        # Vertex S=3 (Ferro): Compatible with Vertical, Diagonal, Frozen
+        probs_S2 = (
+            list(probs_S2.keys()),
+            list(probs_S2.values()),
+        )
+
         probs_S3 = {"G1": v / W3, "G4": d / W3, "G3": f / W3}
+        probs_S3 = (
+            list(probs_S3.keys()),
+            list(probs_S3.values()),
+        )
 
         return {
             "S1": probs_S1,

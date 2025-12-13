@@ -5,9 +5,18 @@ from tqdm import tqdm
 from pathlib import Path
 from time import time
 import pickle
+from line_profiler import profile
 
 
 class MonteCarlo:
+    """
+    Performs the Monte Carlo loops on the problems given.
+    It stores computing times for a problem, the energies and the spins correlations.
+    `length_cycle=2*m*n`
+
+    Saves are made to `save_folder`.
+    """
+
     def __init__(
         self,
         problems: list[Problem],
@@ -23,7 +32,9 @@ class MonteCarlo:
         self.n_rep = n_rep
         self.rng = np.random.default_rng(seed)
         self.save_folder = save_folder
-        
+
+        self.save_folder.mkdir(parents=True, exist_ok=True)
+
         self.energies = np.zeros((len(problems), n_rep, n_cycles))
         self.spins = []
         for pb_idx, pb in enumerate(self.problems):
@@ -32,9 +43,10 @@ class MonteCarlo:
                 self.spins[pb_idx].append([])
                 for _ in range(self.n_cycles):
                     self.spins[pb_idx][r].append([])
-        
+
         self.times = np.zeros((len(problems), n_rep))
 
+    @profile
     def run_problem(self, pb_idx: int):
         pb = self.problems[pb_idx]
         length_cycle = 2 * pb.m * pb.n_sites
@@ -61,20 +73,22 @@ class MonteCarlo:
                     self.energies[pb_idx, r, i] = wl.compute_energy()
 
                     for d in range(1, pb.n_sites):
-                        spins_corr = np.zeros((2*pb.m, pb.n_sites))
-                        for j in range(2*pb.m):
+                        spins_corr = np.zeros((2 * pb.m, pb.n_sites))
+                        for j in range(2 * pb.m):
                             for s in range(pb.n_sites):
-                                spins_corr[j, s] = wl.spins[j, s] * wl.spins[j, (s + d) % pb.n_sites]
+                                spins_corr[j, s] = (
+                                    wl.spins[j, s] * wl.spins[j, (s + d) % pb.n_sites]
+                                )
                         self.spins[pb_idx][r][i].append(np.mean(spins_corr))
 
             self.times[pb_idx, r] = time() - t0
-        
+
         np.save(self.save_folder / "energies.npy", self.energies)
-        with open( self.save_folder / "spins.pickle", "wb") as f:
+        with open(self.save_folder / "spins.pickle", "wb") as f:
             pickle.dump(self.spins, f)
         np.save(self.save_folder / "times.npy", self.times)
 
     def run(self):
+        """Starts the simulation !"""
         for i in range(len(self.problems)):
             self.run_problem(i)
-

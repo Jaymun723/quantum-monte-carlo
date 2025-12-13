@@ -1,9 +1,14 @@
 from production.utils import draw_key, GridUnionFind
 from production import Worldline
 import numpy as np
+from line_profiler import profile
 
 
+@profile
 def get_loops(wl: Worldline, rng: np.random.Generator):
+    """
+    Maps graphs to the Worldline then returns the loops.
+    """
     n = wl.problem.n_sites
     m = wl.problem.m
 
@@ -31,7 +36,7 @@ def get_loops(wl: Worldline, rng: np.random.Generator):
                 else:
                     print("aïe G3")
             elif spins[j, i] != spins[j, i_plus]:  # side, S1
-                key = draw_key(probs["S1"])
+                key = draw_key(probs["S1"], rng)
                 if key == "G1":
                     uf.union(j, i, j_plus, i)
                     uf.union(j, i_plus, j_plus, i_plus)
@@ -41,7 +46,7 @@ def get_loops(wl: Worldline, rng: np.random.Generator):
                 else:
                     print("aïe G3")
             else:  # full, S3
-                key = draw_key(probs["S3"])
+                key = draw_key(probs["S3"], rng)
                 if key == "G1":
                     uf.union(j, i, j_plus, i)
                     uf.union(j, i_plus, j_plus, i_plus)
@@ -55,12 +60,12 @@ def get_loops(wl: Worldline, rng: np.random.Generator):
 
 
 def loop_update(wl: Worldline, rng: np.random.Generator):
+    """
+    Performs the algorithm described in section 1.3.
+    """
     loops = get_loops(wl, rng)
 
-    # loop_changed = 0
     for loop in loops:
         if rng.random() < 0.5:
-            # loop_changed += 1
-            # print(loop)
             for j, i in loop:
                 wl.spins[j, i] *= -1

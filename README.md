@@ -23,3 +23,6 @@
 
 - Energy(J_x)
 - Energy(J_z)
+
+
+entre J_x et J_z ~= 3
