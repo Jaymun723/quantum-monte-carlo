@@ -5,7 +5,6 @@ from tqdm import tqdm
 from pathlib import Path
 from time import time
 import pickle
-from line_profiler import profile
 
 
 class MonteCarlo:
@@ -46,7 +45,6 @@ class MonteCarlo:
 
         self.times = np.zeros((len(problems), n_rep))
 
-    @profile
     def run_problem(self, pb_idx: int):
         pb = self.problems[pb_idx]
         length_cycle = 2 * pb.m * pb.n_sites

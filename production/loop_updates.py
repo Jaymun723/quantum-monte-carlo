@@ -1,10 +1,8 @@
 from production.utils import draw_key, GridUnionFind
 from production import Worldline
 import numpy as np
-from line_profiler import profile
 
 
-@profile
 def get_loops(wl: Worldline, rng: np.random.Generator):
     """
     Maps graphs to the Worldline then returns the loops.

@@ -1,8 +1,6 @@
 import numpy as np
-from line_profiler import profile
 
 
-@profile
 def draw_key(probs: tuple[list[str], list[float]], rng: np.random.Generator) -> str:
     """
     Selects a key based on the probability distribution.
