@@ -216,8 +216,8 @@ class Worldline:  # "w"
 
         ax = plt.gca()
         ax.set_aspect("equal", adjustable="box")
-        ax.set_xlabel("sites ($i$)")
-        ax.set_ylabel("imaginary time ($j$)")
+        ax.set_xlabel("sites ($n$)")
+        ax.set_ylabel("imaginary time ($2m$)")
 
         # If there are loops to draw, draw them first
         if loops is not None and loops[0] is not None:

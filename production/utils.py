@@ -1,19 +1,19 @@
 import numpy as np
+from line_profiler import profile
 
 
-def draw_key(
-    probability_dict: dict[str, float], rng: np.random.Generator = None
-) -> str:
+@profile
+def draw_key(probs: tuple[list[str], list[float]], rng: np.random.Generator) -> str:
     """
     Selects a key based on the probability distribution.
     """
-    if rng is None:
-        rng = np.random.default_rng()
-
-    keys = list(probability_dict.keys())
-    probs = list(probability_dict.values())
-
-    return rng.choice(keys, p=probs)
+    a = rng.random()
+    if a < probs[1][0]:
+        return probs[0][0]
+    elif a < probs[1][0] + probs[1][1]:
+        return probs[0][1]
+    else:
+        return probs[0][2]
 
 
 class GridUnionFind:
@@ -78,3 +78,13 @@ class GridUnionFind:
                 groups[root_id].append((r, c))
 
         return list(groups.values())
+
+
+def get_mean_err(energies: np.ndarray, reverse: bool = False):
+    mean_energies = np.mean(energies, axis=(1, 2))
+    err_energies = np.std(np.mean(energies, axis=2), axis=1) / np.sqrt(
+        energies.shape[1]
+    )
+    if reverse:
+        return mean_energies[::-1], err_energies[::-1]
+    return mean_energies, err_energies

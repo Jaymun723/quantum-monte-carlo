@@ -82,13 +82,26 @@ class Problem:
         h = 0.5 * (W1 + W2 - W3 + f)
 
         probs_S1 = {"G1": v / W1, "G2": h / W1, "G3": f / W1}
+        probs_S1 = (
+            list(probs_S1.keys()),
+            list(probs_S1.values()),
+        )
 
         if W2 > 1e-14:
             probs_S2 = {"G2": h / W2, "G4": d / W2, "G3": f / W2}
         else:
             probs_S2 = {"G2": 0, "G4": 0, "G3": 0}
 
+        probs_S2 = (
+            list(probs_S2.keys()),
+            list(probs_S2.values()),
+        )
+
         probs_S3 = {"G1": v / W3, "G4": d / W3, "G3": f / W3}
+        probs_S3 = (
+            list(probs_S3.keys()),
+            list(probs_S3.values()),
+        )
 
         return {
             "S1": probs_S1,
