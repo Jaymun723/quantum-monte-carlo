@@ -15,7 +15,7 @@ mc = MonteCarlo(
     loop_update,
     n_cycles=5_000,
     n_rep=10,
-    save_folder=Path("./data/loop-J-x-J-z-T-m"),
+    save_folder=Path("../data/loop-J-x-J-z-T-m"),
 )
 
 mc.run()

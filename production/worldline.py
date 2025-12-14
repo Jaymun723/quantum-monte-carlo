@@ -22,9 +22,6 @@ class Worldline:  # "w"
         else:
             self.energy = np.nan
 
-        self.calls = 0
-        self.accepted_calls = 0
-
     def copy(self):
         return Worldline(self.problem, self.spins.copy())
 

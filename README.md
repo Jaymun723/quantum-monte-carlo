@@ -1,28 +1,56 @@
 # Quantum Monte Carlo
 
-# Plan
+## How to run the code
 
-- Representation des wordlines
-- Local updates
-    - Energy
-- Loop updates
-    - Energy
-    - Free hole
-- Continuous time
-- Auxiliairy fielf / spin phonon, etc
+First make the production code available:
+```sh
+pip install -e .
+```
 
-## Sources
-- https://sdrive.cnrs.fr/s/wyYsg5Soz75yAw6?dir=undefined&path=%2F12_QMC_for_spin_systems&openfile=340012424
-- https://journals.aps.org/prb/pdf/10.1103/PhysRevB.18.3351
+The run a simulation located in the `design`folder:
+```sh
+python design/experiment_name.py
+```
 
-## Graphs
-- Energy(m): pour les trois
-    - Faire l'energie a spin up fixe (pour le local move)
-- Energy(T): pour les trois
-- Spins: J_z > 0, J_z < 0
+Data is stored in the `data` folder.
 
-- Energy(J_x)
-- Energy(J_z)
+To visualise the results and generate figures, use notebooks the `analysis` folder.
 
+## Project structure
 
-entre J_x et J_z ~= 3
+```
+quantum-monte-carlo
+├── analysis
+│   ├── energies.ipynb
+│   ├── impact_of_n.ipynb
+│   ├── J_x.ipynb
+│   ├── loop_visualisation.ipynb
+│   ├── temperature.ipynb
+│   ├── thea.ipynb
+│   └── trotter_error.ipynb
+├── data
+├── design  # experiment contains the name of the *fixed* parameters
+│   ├── local_n_J_x_J_z_T.py
+│   ├── loop-J-x-J-z-T-m.py
+│   ├── loop_J_x_J_z_T_m.py
+│   ├── loop-n-J-x-J-z-m.py
+│   ├── loop_n_J_x_J_z_m.py
+│   ├── loop_n_J_x_J_z_T.py
+│   ├── loop_n_J_z_T_m.py
+│   └── vertex_n_J_x_J_z_T.py
+├── figures
+├── production
+│   ├── exact.py  # Code for exact computations
+│   ├── exhaustive_worldline.py  # Generates all worldlines
+│   ├── __init__.py
+│   ├── local_updates.py  # local shifts
+│   ├── loop_updates.py
+│   ├── monte_carlo.py  # performs the whole simulation
+│   ├── problem.py  # Class to holds parameters
+│   ├── utils.py
+│   ├── vertex_updates.py
+│   └── worldline.py
+├── README.md  #this !
+├── report  # source code of the repport
+└── setup.py  # to make the folder `production` available
+```

@@ -16,7 +16,7 @@ mc = MonteCarlo(
     local_shift_move,
     n_cycles=5_000,
     n_rep=10,
-    save_folder=Path("./data/local_n_J_x_J_z_T"),
+    save_folder=Path("../data/local_n_J_x_J_z_T"),
 )
 
 mc.run()
