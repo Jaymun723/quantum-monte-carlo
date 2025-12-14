@@ -64,40 +64,32 @@ class Problem:
     @functools.cached_property
     def loop_probabilities(self):
         """
-        Calculates the generalized loop update probabilities for the XXZ model,
-        allowing for the "frozen" graph (G=3) to handle all parameter regimes.
+        Calculates the loop update probabilities for the XXZ model.
         """
         W1 = self.weight_side
         W2 = -self.weight_cross
         W3 = self.weight_full
 
-        deficit_diag = W1 - (W2 + W3)
-        deficit_vert = W2 - (W1 + W3)
-        deficit_horiz = W3 - (W1 + W2)
+        if (W1 > W2 + W3) or (W2 > W1 + W3) or (W3 > W1 + W2):
+            raise ValueError("Incorrect weight configurarion for loop updates.")
 
-        f = max(0, deficit_diag, deficit_vert, deficit_horiz)
+        d = 0.5 * (W2 + W3 - W1)
+        v = 0.5 * (W1 + W3 - W2)
+        h = 0.5 * (W1 + W2 - W3)
 
-        d = 0.5 * (W2 + W3 - W1 + f)
-        v = 0.5 * (W1 + W3 - W2 + f)
-        h = 0.5 * (W1 + W2 - W3 + f)
-
-        probs_S1 = {"G1": v / W1, "G2": h / W1, "G3": f / W1}
+        probs_S1 = {"G1": v / W1, "G2": h / W1, "G3": 0.0}
         probs_S1 = (
             list(probs_S1.keys()),
             list(probs_S1.values()),
         )
 
-        if W2 > 1e-14:
-            probs_S2 = {"G2": h / W2, "G4": d / W2, "G3": f / W2}
-        else:
-            probs_S2 = {"G2": 0, "G4": 0, "G3": 0}
-
+        probs_S2 = {"G2": h / W2, "G4": d / W2, "G3": 0.0}
         probs_S2 = (
             list(probs_S2.keys()),
             list(probs_S2.values()),
         )
 
-        probs_S3 = {"G1": v / W3, "G4": d / W3, "G3": f / W3}
+        probs_S3 = {"G1": v / W3, "G4": d / W3, "G3": 0.0}
         probs_S3 = (
             list(probs_S3.keys()),
             list(probs_S3.values()),

@@ -182,10 +182,12 @@ def perform_vertex_loop_update(w: Worldline, rng: np.random.Generator):
         delta_E += (dE_new - dE) / m
         delta_Omega *= dOmega_new / dOmega
 
+    w.calls += 1
     if rng.random() < np.abs(delta_Omega):
         w.energy += delta_E
         w.weight *= delta_Omega
         w.spins = spins_copy
+        w.accepted_calls += 1
         return visited_vertex
 
     return None
